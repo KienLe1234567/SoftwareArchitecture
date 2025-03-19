@@ -1,17 +1,14 @@
 'use client'
 import Image from "next/image";
-import { redirect } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import logo from "/public/wqm.jpg";
+import logo from "/public/logoh.jpg";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogOut, Bell, Mail, Menu, X, User } from "lucide-react";
@@ -25,26 +22,18 @@ export default function Navbar() {
     localStorage.removeItem("loginrole");
     router.push("/auth/login"); // Redirect to the login page
   };
-  // const onLogoutSubmit = async (_: FormData) => {
-  //   "use server";
-  //   redirect("/auth/login");
-  // };
 
   return (
     <nav className="bg-white shadow-md border-b border-gray-200">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo Section */}
           <div className="flex items-center">
             <Image
               src={logo}
               alt="Water Monitoring System Logo"
-              width={90}
-              height={40}
+              width={45}
+              height={20}
             />
-            {/* <span className="ml-2 text-xl font-bold text-blue-600">
-              WQM
-            </span> */}
           </div>
 
           {/* Desktop Icons and User Section */}

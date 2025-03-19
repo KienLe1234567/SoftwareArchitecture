@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import Image from "next/image";
 
-import water from "/public/songnuoc.jpg";
-import logowqm from "/public/wqm.jpg";
+import water from "/public/benhvien.jpg";
+import logowqm from "/public/logoh.jpg";
 import { Eye, EyeOff, Key } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -41,21 +41,21 @@ export default function LoginPage() {
       });
       localStorage.setItem("loginrole","officer");
       router.push("/"); // Redirect to dashboarddashboard/homepage
-    } else if (email && password && email === "admin@gmail.com" && password === "123456") {
-      toast({
-        variant: "success",
-        title: "Login Successful",
-        description: "Welcome back Admin!",
-      });
-      localStorage.setItem("loginrole","admin");
-      router.push("/"); // Redirect to dashboarddashboard/homepage
-    }  else {
-      toast({
-        title: "Login Failed",
-        description: "Please check your email and password.",
-        variant: "destructive",
-      });
-    }
+    }//  else if (email && password && email === "admin@gmail.com" && password === "123456") {
+    //   toast({
+    //     variant: "success",
+    //     title: "Login Successful",
+    //     description: "Welcome back Admin!",
+    //   });
+    //   localStorage.setItem("loginrole","admin");
+    //   router.push("/"); // Redirect to dashboarddashboard/homepage
+    // }  else {
+    //   toast({
+    //     title: "Login Failed",
+    //     description: "Please check your email and password.",
+    //     variant: "destructive",
+    //   });
+    // }
   };
 
   return (
@@ -76,12 +76,12 @@ export default function LoginPage() {
       <div className="flex flex-1 flex-col justify-center items-center px-6 sm:px-8 md:px-16 bg-white">
         <div className="w-full max-w-xs sm:max-w-sm md:max-w-lg">
           {/* Logo */}
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-4">
             <Link href={"/"}><Image
               src={logowqm}
               alt="WQM Logo"
-              width={150}
-              height={60}
+              width={100}
+              height={80}
               className="h-16"
               priority
             />
@@ -90,17 +90,17 @@ export default function LoginPage() {
 
           {/* Login Form */}
           <h2 className="text-xl sm:text-2xl font-semibold mb-6 text-center">
-            Đăng nhập
+            Login
           </h2>
           <form onSubmit={handleLogin}>
             <div className="mb-4">
               <label htmlFor="email" className="block mb-2 text-sm font-medium">
-                Tài khoản
+                Email
               </label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Nhập Email hoặc SĐT"
+                placeholder="Enter email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full"
@@ -109,13 +109,13 @@ export default function LoginPage() {
             </div>
             <div className="mb-4">
               <label htmlFor="password" className="block mb-2 text-sm font-medium">
-                Mật khẩu
+                Password
               </label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Nhập mật khẩu"
+                  placeholder="Enter password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pr-10"
@@ -144,10 +144,10 @@ export default function LoginPage() {
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                 />
-                <span className="text-sm">Ghi nhớ đăng nhập</span>
+                <span className="text-sm">Remember</span>
               </label>
               <Link href="/forgot-password" className="text-sm text-blue-500">
-                Quên mật khẩu?
+                Forgot password?
               </Link>
             </div>
             <Button
@@ -155,7 +155,7 @@ export default function LoginPage() {
               className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600"
               disabled={isLoading}
             >
-              {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
+              {isLoading ? "Loging in..." : "Login"}
             </Button>
           </form>
         </div>

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import logo from "/public/atlogo.png";
+import logo from "/public/hos.png";
 
 const AppFooter = () => {
   return (
