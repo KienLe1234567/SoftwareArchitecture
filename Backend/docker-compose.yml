@@ -1,0 +1,46 @@
+version: '3.4'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+
+  staff.api:
+    image: ${DOCKER_REGISTRY-}staffapi
+    build:
+      context: .
+      dockerfile: src/Services/Staff/Staff.Api/Dockerfile
+
+  patient.api:
+    image: ${DOCKER_REGISTRY-}patientapi
+    build:
+      context: .
+      dockerfile: src/Services/Patient/Patient.Api/Dockerfile
+
+
+  billing.api:
+    image: ${DOCKER_REGISTRY-}billingapi
+    build:
+      context: .
+      dockerfile: src/Services/Billing/Billing.Api/Dockerfile
+
+
+  appointment.api:
+    image: ${DOCKER_REGISTRY-}appointmentapi
+    build:
+      context: .
+      dockerfile: src/Services/Appointment/Appointment.Api/Dockerfile
+
+
+  gateway.api:
+    image: ${DOCKER_REGISTRY-}gatewayapi
+    build:
+      context: .
+      dockerfile: src/Gateway/Gateway.Api/Dockerfile
+
+networks:
+  app-network:
+    driver: bridge
+ 
+volumes:
+  sqlserver-data:
+
