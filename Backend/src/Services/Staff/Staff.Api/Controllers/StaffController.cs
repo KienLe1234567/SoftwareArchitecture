@@ -58,7 +58,7 @@ public class StaffController(
     }
 
     [HttpPost("{staffId:guid}/shifts")]
-    public async Task<IResult> RegisterShift([FromRoute] Guid staffId, [FromBody] CreateShiftsRequest req)
+    public async Task<IResult> RegisterShift([FromRoute] Guid staffId, [FromBody] CreateShiftRequest req)
     {
         var shift = req with { StaffId = staffId };
         await staffService.RegisterShift(shift);

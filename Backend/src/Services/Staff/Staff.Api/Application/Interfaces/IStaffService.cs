@@ -8,5 +8,5 @@ public interface IStaffService
     Task UpdateStaff(UpdateStaffRequest req);
     Task DeleteStaff(Guid id);
     Task<ShiftListResponse> GetStaffShifts(Guid staffId);
-    Task RegisterShift(CreateShiftsRequest req);
+    Task RegisterShift(CreateShiftRequest req);
 }

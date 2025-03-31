@@ -1,10 +1,9 @@
 ﻿namespace Staffs.Api.Dtos;
 
-public record TimeRange(
-    DateTime StartTime,
-    DateTime EndTime);
-
-public record CreateShiftsRequest(
+public record CreateShiftRequest(
     Guid StaffId,
-    List<TimeRange> Ranges);
+    DateTime StartTime,
+    DateTime EndTime,
+    string Description = "",
+    string Location = "");
 

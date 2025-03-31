@@ -60,7 +60,7 @@ public class StaffService(
         await staffRepo.SaveChangesAsync();
     }
 
-    public async Task RegisterShift(CreateShiftsRequest req)
+    public async Task RegisterShift(CreateShiftRequest req)
     {
         var staff = await staffRepo.GetById(req.StaffId);
         if (staff is null)
@@ -68,14 +68,16 @@ public class StaffService(
             throw new Exception("Staff not found");
         }
 
-        var shifts = req.Ranges.Select(x => new Shift
+        var shift = new Shift
         {
             StaffId = req.StaffId,
-            StartTime = x.StartTime,
-            EndTime = x.EndTime
-        }).ToList();
+            StartTime = req.StartTime,
+            EndTime = req.EndTime,
+            Description = req.Description,
+            Location = req.Location
+        };
 
-        staff.RegisterShifts(shifts);
+        staff.RegisterShift(shift);
         await staffRepo.SaveChangesAsync();
     }
 
@@ -83,6 +85,6 @@ public class StaffService(
     {
         var shifts = await staffRepo.GetShiftsByStaffId(staffId);
 
-        return new ShiftListResponse(shifts.Select(s => new ShiftDetail(s.Id, s.StaffId, s.StartTime, s.EndTime)).ToList());
+        return new ShiftListResponse(shifts.Select(s => new ShiftDetail(s.Id, s.StaffId, s.StartTime, s.EndTime, s.Description, s.Location)).ToList());
     }
 }

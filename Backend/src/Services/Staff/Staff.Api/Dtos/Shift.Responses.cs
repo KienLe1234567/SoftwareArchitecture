@@ -4,7 +4,9 @@ public record ShiftDetail(
     Guid Id,
     Guid StaffId,
     DateTime StartTime,
-    DateTime EndTime);
+    DateTime EndTime,
+    string Description,
+    string Location);
 
 public record ShiftListResponse(
     List<ShiftDetail> Shifts);
