@@ -8,7 +8,7 @@ public class StaffRepo(StaffDbContext dbContext) : IStaffRepo
 {
     public async Task<Staff?> GetById(Guid id)
     {
-        return await dbContext.Staff.Where(x => x.Id == id).FirstOrDefaultAsync();
+        return await dbContext.Staff.Include(s => s.Shifts).Where(x => x.Id == id).FirstOrDefaultAsync();
     }
 
     public void Add(Staff staff)

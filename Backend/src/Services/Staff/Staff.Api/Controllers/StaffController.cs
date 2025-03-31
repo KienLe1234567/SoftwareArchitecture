@@ -65,4 +65,21 @@ public class StaffController(
 
         return Results.Created();
     }
+
+    [HttpPut("{staffId:guid}/shifts/{shiftId:guid}")]
+    public async Task<IResult> UpdateShift([FromRoute] Guid staffId, [FromRoute] Guid shiftId, [FromBody] UpdateShiftRequest req)
+    {
+        var shift = req with { Id = shiftId, StaffId = staffId };
+        await staffService.UpdateShift(shift);
+
+        return Results.NoContent();
+    }
+
+    [HttpDelete("{staffId:guid}/shifts/{shiftId:guid}")]
+    public async Task<IResult> DeleteShift([FromRoute] Guid staffId, [FromRoute] Guid shiftId)
+    {
+        await staffService.DeleteShift(staffId, shiftId);
+
+        return Results.NoContent();
+    }
 }

@@ -9,4 +9,6 @@ public interface IStaffService
     Task DeleteStaff(Guid id);
     Task<ShiftListResponse> GetStaffShifts(Guid staffId);
     Task RegisterShift(CreateShiftRequest req);
+    Task UpdateShift(UpdateShiftRequest req);
+    Task DeleteShift(Guid staffId, Guid shiftId);
 }

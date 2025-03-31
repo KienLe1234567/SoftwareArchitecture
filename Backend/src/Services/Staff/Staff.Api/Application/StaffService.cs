@@ -87,4 +87,46 @@ public class StaffService(
 
         return new ShiftListResponse(shifts.Select(s => new ShiftDetail(s.Id, s.StaffId, s.StartTime, s.EndTime, s.Description, s.Location)).ToList());
     }
+
+    public async Task UpdateShift(UpdateShiftRequest req)
+    {
+        var staff = await staffRepo.GetById(req.StaffId);
+        if (staff is null)
+        {
+            throw new Exception("Staff not found");
+        }
+
+        var shift = staff.Shifts.Where(s => s.Id == req.Id).FirstOrDefault();
+
+        if (shift is null)
+        {
+            throw new Exception("Shift not found");
+        }
+
+        shift.StartTime = req.StartTime;
+        shift.EndTime = req.EndTime;
+        shift.Description = req.Description;
+        shift.Location = req.Location;
+
+        await staffRepo.SaveChangesAsync();
+    }
+
+    public async Task DeleteShift(Guid staffId, Guid shiftId)
+    {
+        var staff = await staffRepo.GetById(staffId);
+        if (staff is null)
+        {
+            throw new Exception("Staff not found");
+        }
+
+        var shift = staff.Shifts.Where(s => s.Id == shiftId).FirstOrDefault();
+
+        if (shift is null)
+        {
+            throw new Exception("Shift not found");
+        }
+
+        staff.Shifts.Remove(shift);
+        await staffRepo.SaveChangesAsync();
+    }
 }
