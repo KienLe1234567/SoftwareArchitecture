@@ -36,7 +36,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
-      - ConnectionStrings__StaffConnection=Server=sqlserver;Database=HospitalManagement;User Id=sa;Password=L0c@lpassword;TrustServerCertificate=True;MultiSubnetFailover=True;
+      - ConnectionStrings__AppointmentConnection=Server=sqlserver;Database=HospitalManagement;User Id=sa;Password=L0c@lpassword;TrustServerCertificate=True;MultiSubnetFailover=True;
     depends_on:
       - sqlserver
     networks:

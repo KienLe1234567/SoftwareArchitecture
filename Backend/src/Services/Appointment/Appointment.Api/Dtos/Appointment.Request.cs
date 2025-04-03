@@ -1,16 +1,15 @@
+using Appointments.Api.Domain.Enums;
+
 namespace Appointments.Api.Dtos;
 
 public record CreateAppointmentRequest(
-    DateTime StartTime,
-    DateTime EndTime,
-    Guid PatientId,
-    Guid DoctorId
+    Guid SlotId,
+    Guid PatientId
 );
 
 public record UpdateAppointmentRequest(
     Guid AppointmentId,
-    DateTime StartTime,
-    DateTime EndTime,
+    Guid SlotId,
     Guid PatientId,
-    Guid DoctorId
+    AppointmentStatus Status
 );
