@@ -17,6 +17,11 @@ public class SlotController(ISlotService slotService) : ControllerBase
     [HttpGet("")]
     public async Task<IResult> GetByDoctorIdAndDate([FromQuery] Guid doctorId, [FromQuery] DateTime date)
     {
+        if (doctorId == Guid.Empty || date == DateTime.MinValue)
+        {
+            return Results.BadRequest();
+        }
+
         var slots = await slotService.GetSlotsByDoctorIdAndDate(doctorId, date);
 
         return Results.Ok(slots);

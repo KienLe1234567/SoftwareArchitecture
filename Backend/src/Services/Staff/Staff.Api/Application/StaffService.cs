@@ -1,9 +1,12 @@
-﻿using Staffs.Api.Application.Interfaces;
+﻿using MassTransit;
+using Shared.Contracts;
+using Staffs.Api.Application.Interfaces;
 
 namespace Staffs.Api.Application;
 
 public class StaffService(
-    IStaffRepo staffRepo) : IStaffService
+    IStaffRepo staffRepo,
+    IPublishEndpoint publishEndpoint) : IStaffService
 {
     public async Task<StaffDetailResponse> GetById(Guid id)
     {
@@ -79,6 +82,11 @@ public class StaffService(
 
         staff.RegisterShift(shift);
         await staffRepo.SaveChangesAsync();
+
+        await publishEndpoint.Publish(new DoctorShiftCreatedEvent(
+            staff.Id,
+            shift.StartTime,
+            shift.EndTime));
     }
 
     public async Task<ShiftListResponse> GetStaffShifts(Guid staffId)
