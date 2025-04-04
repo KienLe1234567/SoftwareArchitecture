@@ -36,6 +36,9 @@ services:
     build:
       context: .
       dockerfile: src/Gateway/Gateway.Api/Dockerfile
+  
+  messagequeue:
+    image: rabbitmq:management
 
 networks:
   app-network:

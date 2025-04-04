@@ -1,3 +1,4 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Staffs.Api.Application;
@@ -26,6 +27,21 @@ var MyAllowSpecificOrigins = "AllowAll";
     builder.Services.AddControllers();
     builder.Services.AddApplication();
     builder.Services.AddStaffDbContext(builder.Configuration.GetConnectionString("StaffConnection")!);
+
+    builder.Services.AddMassTransit(config =>
+    {
+        config.SetKebabCaseEndpointNameFormatter();
+        config.UsingRabbitMq((ctx, cfg) =>
+        {
+            cfg.Host(new Uri(builder.Configuration["MessageBroker:Host"]!), h =>
+            {
+                h.Username(builder.Configuration["MessageBroker:Username"]!);
+                h.Password(builder.Configuration["MessageBroker:Password"]!);
+            });
+
+            cfg.ConfigureEndpoints(ctx);
+        });
+    });
 }
 
 var app = builder.Build();

@@ -16,6 +16,17 @@ public class SlotRepo(AppointmentDbContext dbContext) : ISlotRepo
     {
         return await dbContext.Slots
             .Where(x => x.DoctorId == doctorId && x.StartTime.Date == time.Date)
+            .OrderBy(s => s.StartTime)
             .ToListAsync();
+    }
+
+    public void AddRange(List<TimeSlot> slots)
+    {
+        dbContext.Slots.AddRange(slots);
+    }
+
+    public async Task SaveChangesAsync()
+    {
+        await dbContext.SaveChangesAsync();
     }
 }

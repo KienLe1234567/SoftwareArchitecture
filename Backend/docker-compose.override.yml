@@ -105,3 +105,17 @@ services:
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+  
+  messagequeue:
+    container_name: messagequeue
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - app-network  

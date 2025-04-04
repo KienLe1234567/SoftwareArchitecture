@@ -1,5 +1,7 @@
 using Appointments.Api.Application;
+using Appointments.Api.Application.Consumers;
 using Appointments.Api.Infrastructure.Database;
+using MassTransit;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +28,24 @@ var MyAllowSpecificOrigins = "AllowAll";
     builder.Services.AddControllers();
     builder.Services.AddApplication();
     builder.Services.AddAppointmentDbContext(builder.Configuration.GetConnectionString("AppointmentConnection")!);
+
+    builder.Services.AddMassTransit(config =>
+    {
+        config.SetKebabCaseEndpointNameFormatter();
+
+        config.AddConsumer<DoctorShiftCreatedConsumer>();
+
+        config.UsingRabbitMq((ctx, cfg) =>
+        {
+            cfg.Host(new Uri(builder.Configuration["MessageBroker:Host"]!), h =>
+            {
+                h.Username(builder.Configuration["MessageBroker:Username"]!);
+                h.Password(builder.Configuration["MessageBroker:Password"]!);
+            });
+
+            cfg.ConfigureEndpoints(ctx);
+        });
+    });
 }
 
 var app = builder.Build();
