@@ -31,4 +31,20 @@ public class AppointmentController(IAppointmentService appointmentService) : Con
 
         return Results.NoContent();
     }
+
+    [HttpPost("{appointmentId:guid}/cancel")]
+    public async Task<IResult> Cancel([FromRoute] Guid appointmentId)
+    {
+        await appointmentService.CancelAppointment(appointmentId);
+
+        return Results.NoContent();
+    }
+
+    [HttpPost("{appointmentId:guid}/reschedule")]
+    public async Task<IResult> Reschedule([FromRoute] Guid appointmentId, [FromBody] RescheduleAppointmentRequest req)
+    {
+        await appointmentService.RescheduleAppointment(appointmentId, req.NewSlotId);
+
+        return Results.NoContent();
+    }
 }

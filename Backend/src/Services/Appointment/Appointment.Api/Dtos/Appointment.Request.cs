@@ -13,3 +13,6 @@ public record UpdateAppointmentRequest(
     Guid PatientId,
     AppointmentStatus Status
 );
+
+public record RescheduleAppointmentRequest(
+    Guid NewSlotId);
