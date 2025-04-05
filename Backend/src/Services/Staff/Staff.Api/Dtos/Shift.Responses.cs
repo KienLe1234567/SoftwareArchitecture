@@ -10,3 +10,6 @@ public record ShiftDetail(
 
 public record ShiftListResponse(
     List<ShiftDetail> Shifts);
+
+public record CreateShiftResponse(
+    Guid Id);

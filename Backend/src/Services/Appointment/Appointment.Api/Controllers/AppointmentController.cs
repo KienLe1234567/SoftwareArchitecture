@@ -10,9 +10,9 @@ public class AppointmentController(IAppointmentService appointmentService) : Con
     [HttpPost]
     public async Task<IResult> Create([FromBody] CreateAppointmentRequest req)
     {
-        await appointmentService.CreateAppointment(req);
+        var id = await appointmentService.CreateAppointment(req);
 
-        return Results.Created();
+        return Results.Created($"api/appointments/{id}", id);
     }
 
     [HttpGet("{appointmentId:guid}")]

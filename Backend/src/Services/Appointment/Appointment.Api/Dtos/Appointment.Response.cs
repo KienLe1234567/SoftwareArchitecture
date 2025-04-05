@@ -9,3 +9,6 @@ public record AppointmentDetailResponse(
     AppointmentStatus Status,
     Guid PatientId
 );
+
+public record CreateAppointmentResponse(
+    Guid Id);

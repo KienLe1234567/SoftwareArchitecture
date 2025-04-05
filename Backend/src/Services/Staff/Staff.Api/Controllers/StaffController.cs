@@ -27,9 +27,9 @@ public class StaffController(
     [HttpPost]
     public async Task<IResult> Create([FromBody] CreateStaffRequest req)
     {
-        await staffService.RegisterStaff(req);
+        var id = await staffService.RegisterStaff(req);
 
-        return Results.Created();
+        return Results.Created($"/api/staffs/{id}", id);
     }
 
     [HttpPut("{staffId:guid}")]
@@ -61,9 +61,9 @@ public class StaffController(
     public async Task<IResult> RegisterShift([FromRoute] Guid staffId, [FromBody] CreateShiftRequest req)
     {
         var shift = req with { StaffId = staffId };
-        await staffService.RegisterShift(shift);
+        var id = await staffService.RegisterShift(shift);
 
-        return Results.Created();
+        return Results.Created($"/api/staffs/{staffId}/shifts/{id}", id);
     }
 
     [HttpPut("{staffId:guid}/shifts/{shiftId:guid}")]

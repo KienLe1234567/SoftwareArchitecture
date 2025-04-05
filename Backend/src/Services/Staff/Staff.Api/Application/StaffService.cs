@@ -25,7 +25,7 @@ public class StaffService(
         return new StaffListResponse(staffs.Select(x => new StaffDetailResponse(x.Id, x.Name, x.Email, x.PhoneNumber, x.Address)).ToList());
     }
 
-    public async Task RegisterStaff(CreateStaffRequest req)
+    public async Task<CreateStaffResponse> RegisterStaff(CreateStaffRequest req)
     {
         Staff newStaff = new()
         {
@@ -37,6 +37,8 @@ public class StaffService(
 
         staffRepo.Add(newStaff);
         await staffRepo.SaveChangesAsync();
+
+        return new CreateStaffResponse(newStaff.Id);
     }
 
     public async Task DeleteStaff(Guid id)
@@ -63,7 +65,7 @@ public class StaffService(
         await staffRepo.SaveChangesAsync();
     }
 
-    public async Task RegisterShift(CreateShiftRequest req)
+    public async Task<CreateShiftResponse> RegisterShift(CreateShiftRequest req)
     {
         var staff = await staffRepo.GetById(req.StaffId);
         if (staff is null)
@@ -87,6 +89,8 @@ public class StaffService(
             staff.Id,
             shift.StartTime,
             shift.EndTime));
+
+        return new CreateShiftResponse(shift.Id);
     }
 
     public async Task<ShiftListResponse> GetStaffShifts(Guid staffId)

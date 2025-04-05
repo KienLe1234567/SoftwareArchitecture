@@ -10,3 +10,6 @@ public record StaffDetailResponse(
 
 public record StaffListResponse(
     List<StaffDetailResponse> staffs);
+
+public record CreateStaffResponse(
+    Guid Id);

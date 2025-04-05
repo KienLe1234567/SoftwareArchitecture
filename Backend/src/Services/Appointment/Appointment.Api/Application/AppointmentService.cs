@@ -6,7 +6,7 @@ namespace Appointments.Api.Application;
 
 public class AppointmentService(IAppointmentRepo appointmentRepo) : IAppointmentService
 {
-    public async Task CreateAppointment(CreateAppointmentRequest res)
+    public async Task<CreateAppointmentResponse> CreateAppointment(CreateAppointmentRequest res)
     {
         Appointment appointment = new()
         {
@@ -21,6 +21,8 @@ public class AppointmentService(IAppointmentRepo appointmentRepo) : IAppointment
         appointment.Slot.Status = SlotStatus.BOOKED;
 
         await appointmentRepo.SaveChangesAsync();
+
+        return new CreateAppointmentResponse(appointment.Id);
     }
 
     public async Task<AppointmentDetailResponse> GetAppointmentById(Guid appointmentId)
