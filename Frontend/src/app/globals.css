@@ -1,6 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import 'react-day-picker/dist/style.css';
+
 .menu-sidebar {
     box-shadow: 7px 7px 10px rgba(0, 0, 0, .03);
     flex-shrink: 0;
