@@ -8,7 +8,8 @@
         "patient.api": "StartDebugging",
         "billing.api": "StartDebugging",
         "appointment.api": "StartDebugging",
-        "gateway.api": "StartDebugging"
+        "gateway.api": "StartDebugging",
+        "email.api": "StartDebugging"
       }
     }
   }
