@@ -40,10 +40,17 @@ services:
   messagequeue:
     image: rabbitmq:management
 
+  identity.api:
+    image: ${DOCKER_REGISTRY-}identityapi
+    build:
+      context: .
+      dockerfile: src/Services/Identity/Identity.Api/Dockerfile
+
 networks:
   app-network:
     driver: bridge
  
 volumes:
   sqlserver-data:
+
 
