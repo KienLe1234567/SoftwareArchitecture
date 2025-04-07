@@ -114,7 +114,7 @@ export default function DoctorWorkloadPage() {
       <div className="flex-grow grid grid-cols-1 md:grid-cols-4 gap-6 p-6">
         {/* Column 1: Doctor List & Calendar */}
         <div className="col-span-1 flex flex-col gap-4">
-          <div className="flex max-h-[calc(100vh-350px)]"> {/* Adjust max-height as needed */}
+          <div className="flex w-full max-h-[calc(100vh-350px)]"> {/* Adjust max-height as needed */}
             {/* DoctorList expects onSelectDoctor to take an ID */}
             <DoctorList
               selectedDoctorId={selectedDoctorId}

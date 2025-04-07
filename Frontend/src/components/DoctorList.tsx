@@ -96,7 +96,7 @@ export default function DoctorList({ selectedDoctorId, onSelectDoctor, maxVisibl
   // The error state is handled by the AlertDialog below
   return (
     <> {/* Use Fragment to wrap component and dialog */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-all duration-200 h-full flex flex-col">
+      <div className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-all duration-200 h-full flex flex-col">
         <h2 className="text-xl font-semibold mb-4">Doctors</h2>
 
         <div className="relative mb-4">

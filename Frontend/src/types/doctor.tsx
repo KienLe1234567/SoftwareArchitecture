@@ -6,7 +6,7 @@ export interface Doctor {
     phoneNumber: string;
     address: string;
   }
-  export interface DoctorDto {
+export interface DoctorDto {
     staffs: Doctor[];
   }
   

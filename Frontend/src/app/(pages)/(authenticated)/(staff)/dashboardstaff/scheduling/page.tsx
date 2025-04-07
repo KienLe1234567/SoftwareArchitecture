@@ -37,7 +37,7 @@ export default function SchedulePage() {
 
   return (
     <div className="container mx-auto px-1 py-8">
-      <h1 className="mb-8 text-3xl font-bold">Doctor Schedule Management</h1>
+      {/* <h1 className="mb-8 text-3xl font-bold">Doctor Schedule Management</h1> */}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         {/* Doctor List - Use actual component wrapped in Suspense */}
