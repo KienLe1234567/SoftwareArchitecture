@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner";
 
 import "./globals.css";
+
 export const metadata: Metadata = {
   title: "Water Quality Monitoring System",
-  description: "The system which helps officers collect and research the data inside.",
+  description:
+    "The system which helps officers collect and research the data inside.",
 };
 
 export default function RootLayout({
@@ -19,7 +21,7 @@ export default function RootLayout({
         <link rel="icon" href="/atlogo.png" type="image/jpeg" sizes="16x16" />
       </head>
       <body>
-        <Toaster />
+        <Toaster richColors />
         {children}
       </body>
     </html>

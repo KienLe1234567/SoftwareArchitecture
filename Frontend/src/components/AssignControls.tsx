@@ -1,8 +1,9 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Check, X, Calendar, CalendarRange, Trash2, Save } from "lucide-react"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+// Import Loader2 for loading indicator
+import { Check, X, Calendar, CalendarRange, Save, RotateCcw, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,182 +11,212 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 interface Props {
-  selectedSlots: string[]
-  updateDoctorWorkload: (slots: string[]) => void
-  assignRangeSlots: (includeWeekend: boolean) => void
-  cancelRangeSlots: () => void
-  calendarMode: "single" | "range"
-  isDirty: boolean
-  setIsDirty: (dirty: boolean) => void
-  assignDefaultDateSlots: () => void
+  onSaveChanges: () => void;
+  onAssignDefaultDate: () => void;
+  onAssignDefaultRange: (includeWeekend: boolean) => void;
+  onClearPending: () => void;
+  calendarMode: "single" | "range";
+  hasPendingChanges: boolean;
+  isDateOrRangeSelected: boolean;
+  isSaving?: boolean; // <-- 1. Add isSaving prop (optional is safer)
 }
 
 export default function AssignControls({
-  selectedSlots,
-  updateDoctorWorkload,
-  assignRangeSlots,
-  cancelRangeSlots,
+  onSaveChanges,
+  onAssignDefaultDate,
+  onAssignDefaultRange,
+  onClearPending,
   calendarMode,
-  isDirty,
-  setIsDirty,
-  assignDefaultDateSlots,
+  hasPendingChanges,
+  isDateOrRangeSelected,
+  isSaving = false, // <-- 2. Destructure isSaving, provide default value
 }: Props) {
-  const [includeWeekend, setIncludeWeekend] = useState(false)
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
+  const [includeWeekend, setIncludeWeekend] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{
-    title: string
-    description: string
-    action: () => void
+    title: string;
+    description: string;
+    action: () => void;
   }>({
     title: "",
     description: "",
     action: () => {},
-  })
+  });
 
-  const checkModeAndRun = (requiredMode: "single" | "range", callback: () => void) => {
-    if (calendarMode !== requiredMode) {
-      alert(`Please toggle to "${requiredMode}" mode above before performing this action.`)
-      return false
+  const handleConfirm = (
+    title: string,
+    description: string,
+    action: () => void,
+    requiredMode?: "single" | "range",
+    requiresSelection: boolean = true
+  ) => {
+    // Prevent opening confirm dialog if already saving
+    if (isSaving) return;
+
+    if (requiresSelection && !isDateOrRangeSelected) {
+        alert("Please select a date or date range first.");
+        return;
     }
-    return true
-  }
-
-  const handleConfirm = (title: string, description: string, action: () => void, requiredMode?: "single" | "range") => {
-    if (requiredMode && !checkModeAndRun(requiredMode, () => {})) {
-      return
+    if (requiredMode && calendarMode !== requiredMode) {
+      alert(`This action requires the calendar to be in "${requiredMode}" mode.`);
+      return;
     }
 
-    setConfirmAction({
-      title,
-      description,
-      action,
-    })
-    setConfirmDialogOpen(true)
-  }
+    setConfirmAction({ title, description, action });
+    setConfirmDialogOpen(true);
+  };
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 transition-all duration-200">
-  <div className="flex flex-col sm:flex-row flex-wrap gap-3">
-    <Button
-      variant="primary"
-      className="flex items-center gap-2 w-full sm:w-auto hover:bg-primary/10 hover:text-primary"
-      onClick={() =>
-        handleConfirm(
-          "Assign Default Schedule",
-          "Are you sure you want to assign default time slots for the selected date?",
-          assignDefaultDateSlots,
-          "single"
-        )
-      }
-    >
-      <Calendar className="h-4 w-4" />
-      <span>Default Date</span>
-    </Button>
-
-    <Button
-      variant="success"
-      className="flex items-center gap-2 w-full sm:w-auto hover:bg-primary/10 hover:text-primary"
-      onClick={() =>
-        handleConfirm(
-          "Assign Default Range",
-          `Assign default slots to selected date range ${includeWeekend ? "including" : "excluding"} weekends?`,
-          () => assignRangeSlots(includeWeekend),
-          "range"
-        )
-      }
-    >
-      <CalendarRange className="h-4 w-4" />
-      <span>Default Range</span>
-    </Button>
-
-    {isDirty && selectedSlots.length > 0 && (
-      <Button
-        variant="default"
-        className="flex items-center gap-2 w-full sm:w-auto"
-        onClick={() =>
-          handleConfirm(
-            "Update Time Slots",
-            "Are you sure you want to update the selected time slots?",
-            () => {
-              updateDoctorWorkload(selectedSlots)
-              setIsDirty(false)
-            },
-            "single"
-          )
-        }
-      >
-        <Save className="h-4 w-4" />
-        <span>Save Changes</span>
-      </Button>
-    )}
-
-    <Button
-      variant="destructive"
-      className="flex items-center gap-2 w-full sm:w-auto"
-      onClick={() =>
-        handleConfirm(
-          "Cancel Slots",
-          calendarMode === "single"
-            ? "Are you sure you want to cancel all slots for the selected date?"
-            : "Are you sure you want to cancel all slots for the selected date range?",
-          cancelRangeSlots
-        )
-      }
-    >
-      <Trash2 className="h-4 w-4" />
-      <span>Cancel Slots</span>
-    </Button>
-
-    <Button
-      variant={includeWeekend ? "secondary" : "outline"}
-      className={cn(
-        "flex items-center gap-2 w-full sm:w-auto sm:ml-auto",
-        includeWeekend ? "bg-secondary" : "hover:bg-secondary/10 hover:text-secondary"
-      )}
-      onClick={() => setIncludeWeekend(!includeWeekend)}
-    >
-      {includeWeekend ? (
-        <>
-          <Check className="h-4 w-4 text-secondary-foreground" />
-          <span>Including Weekends</span>
-        </>
-      ) : (
-        <>
-          <X className="h-4 w-4" />
-          <span>Excluding Weekends</span>
-        </>
-      )}
-    </Button>
-  </div>
-
-  {/* Confirm Dialog */}
-  <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>{confirmAction.title}</DialogTitle>
-        <DialogDescription>{confirmAction.description}</DialogDescription>
-      </DialogHeader>
-      <DialogFooter>
-        <Button variant="outline" onClick={() => setConfirmDialogOpen(false)}>
-          Cancel
-        </Button>
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-center">
+        {/* Assign Default Date */}
         <Button
-          onClick={() => {
-            confirmAction.action()
-            setConfirmDialogOpen(false)
-          }}
+          variant="outline"
+          className="flex items-center gap-2 w-full sm:w-auto"
+          onClick={() =>
+            handleConfirm(
+              "Assign Default Schedule",
+              "Add default time slots (7-12, 13-18) for the selected date to your pending changes?",
+              onAssignDefaultDate,
+              "single"
+            )
+          }
+          // <-- 3. Disable if saving or conditions not met -->
+          disabled={isSaving || !isDateOrRangeSelected || calendarMode !== 'single'}
+          title={isSaving ? "Saving..." : calendarMode !== 'single' ? "Switch to single date mode" : !isDateOrRangeSelected ? "Select a date" : "Add default slots for date"}
         >
-          Confirm
+          <Calendar className="h-4 w-4" />
+          <span>Default Date</span>
         </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-</div>
 
-  )
+        {/* Assign Default Range */}
+        <Button
+          variant="outline"
+          className="flex items-center gap-2 w-full sm:w-auto"
+          onClick={() =>
+            handleConfirm(
+              "Assign Default Range",
+              `Add default slots to the selected date range ${includeWeekend ? "including" : "excluding"} weekends to your pending changes?`,
+              () => onAssignDefaultRange(includeWeekend),
+              "range"
+            )
+          }
+          // <-- 3. Disable if saving or conditions not met -->
+          disabled={isSaving || !isDateOrRangeSelected || calendarMode !== 'range'}
+          title={isSaving ? "Saving..." : calendarMode !== 'range' ? "Switch to range mode" : !isDateOrRangeSelected ? "Select a range" : "Add default slots for range"}
+        >
+          <CalendarRange className="h-4 w-4" />
+          <span>Default Range</span>
+        </Button>
+
+        {/* Save Changes */}
+        {hasPendingChanges && (
+          <Button
+            variant="success"
+            className="flex items-center gap-2 w-full sm:w-auto"
+            onClick={() =>
+              handleConfirm(
+                "Save Pending Shifts",
+                "Are you sure you want to register the newly selected time slots?",
+                onSaveChanges,
+                undefined,
+                false
+              )
+            }
+            // <-- 3. Disable if saving -->
+            disabled={isSaving}
+            title={isSaving ? "Saving..." : "Save pending shifts to the schedule"}
+          >
+            {/* <-- 4. Add loading indicator --> */}
+            {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+                <Save className="mr-2 h-4 w-4" /> // Added margin for consistency
+            )}
+            <span>{isSaving ? "Saving..." : "Save Changes"}</span>
+          </Button>
+        )}
+
+        {/* Clear Pending Changes */}
+        {hasPendingChanges && (
+           <Button
+             variant="ghost"
+             className="flex items-center gap-2 w-full sm:w-auto text-muted-foreground hover:text-foreground"
+             onClick={() =>
+               handleConfirm(
+                 "Clear Pending Changes",
+                 "Are you sure you want to discard all unsaved time slot selections?",
+                 onClearPending,
+                 undefined,
+                 false
+               )
+             }
+             // <-- 3. Disable if saving -->
+             disabled={isSaving}
+             title={isSaving ? "Saving..." : "Discard unsaved selections"}
+           >
+             <RotateCcw className="h-4 w-4" />
+             <span>Clear Pending</span>
+           </Button>
+        )}
+
+
+        {/* Include Weekend Toggle */}
+        <Button
+          variant={includeWeekend ? "secondary" : "outline"}
+          className={cn(
+            "flex items-center gap-2 w-full sm:w-auto sm:ml-auto",
+            includeWeekend ? "bg-secondary" : "hover:bg-secondary/10 hover:text-secondary",
+            calendarMode !== 'range' ? 'opacity-50 cursor-not-allowed' : '',
+            // <-- 3. Disable if saving -->
+            isSaving ? 'opacity-50 cursor-not-allowed' : ''
+          )}
+          onClick={() => !isSaving && calendarMode === 'range' && setIncludeWeekend(!includeWeekend)}
+          // <-- 3. Disable if saving or conditions not met -->
+          disabled={isSaving || calendarMode !== 'range'}
+          title={isSaving ? "Saving..." : calendarMode !== 'range' ? "Only available in range mode" : (includeWeekend ? "Exclude weekends for default range" : "Include weekends for default range")}
+        >
+          {includeWeekend ? (
+            <>
+              <Check className="h-4 w-4 text-secondary-foreground" />
+              <span>Incl. Weekends</span>
+            </>
+          ) : (
+            <>
+              <X className="h-4 w-4" />
+              <span>Excl. Weekends</span>
+            </>
+          )}
+        </Button>
+      </div>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{confirmAction.title}</DialogTitle>
+            <DialogDescription>{confirmAction.description}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant={confirmAction.title.includes("Save") ? "success" : confirmAction.title.includes("Clear") ? "destructive" : "default"}
+              onClick={() => {
+                confirmAction.action();
+                setConfirmDialogOpen(false);
+              }}
+            >
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }
-

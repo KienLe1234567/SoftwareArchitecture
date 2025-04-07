@@ -1,244 +1,87 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import type { DateRange } from "react-day-picker"
-import type { Doctor } from "@/types/doctor"
-import DoctorList from "@/components/DoctorList"
-import CalendarStaff from "@/components/CalendarStaff"
-import TimeSlotGrid from "@/components/TimeSlotGrid"
-import AssignControls from "@/components/AssignControls"
-import { UserRound } from "lucide-react"
+// Import Suspense from React
+import { Suspense, useState } from "react";
 
-const dummyDoctors: Doctor[] = [
-  {
-    id: "1",
-    name: "Dr. John Doe",
-    phone: "123-456-7890",
-    email: "john@example.com",
-    workload: {},
-  },
-  {
-    id: "2",
-    name: "Dr. Jane Smith",
-    phone: "987-654-3210",
-    email: "jane@example.com",
-    workload: {},
-  },
-]
+// Import helpers
+import { UserRound } from "lucide-react";
+
+// Import the actual DoctorList
+// Use your actual Shift types
+import DoctorList from "@/components/DoctorList";
+// Use your actual API functions
+// Correct the import path if necessary (usually components/ui for Shadcn)
+import StaffShiftCalendar from "@/components/StaffShiftCalendar";
+// Import Skeleton for fallback
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Remove the DummyDoctorList component definition
+// const DummyDoctorList = (...) => { ... };
+
+// Define a simple loading fallback for the DoctorList
+const DoctorListFallback = () => (
+  <div className="flex h-full flex-col rounded-xl bg-white p-6 shadow-md dark:bg-gray-800">
+    <h2 className="mb-4 text-xl font-semibold">Doctors</h2>
+    <Skeleton className="mb-4 h-10 w-full" /> {/* Search input skeleton */}
+    <div className="mt-4 flex-1 space-y-3">
+      <Skeleton className="h-16 w-full" />
+      <Skeleton className="h-16 w-full" />
+      <Skeleton className="h-16 w-full" />
+      {/* Add more skeletons if desired */}
+    </div>
+  </div>
+);
 
 export default function SchedulePage() {
-  const [doctors, setDoctors] = useState<Doctor[]>(dummyDoctors)
-  const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null)
-
-  const [calendarMode, setCalendarMode] = useState<"single" | "range">("single")
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
-  const [selectedRange, setSelectedRange] = useState<DateRange | undefined>(undefined)
-
-  const [selectedSlots, setSelectedSlots] = useState<string[]>([])
-  const [currentDate, setCurrentDate] = useState<Date | null>(null)
-  const selectedDoctor = doctors.find((doc) => doc.id === selectedDoctorId)
-  const [isDirty, setIsDirty] = useState(false)
-
-  const dateToKey = (date: Date) => date.toISOString().split("T")[0]
-
-  const updateDoctorWorkload = (slots: string[]) => {
-    if (!selectedDoctor || !currentDate) return
-
-    const updatedDoctors = doctors.map((doc) => {
-      if (doc.id === selectedDoctor.id) {
-        const workload = { ...doc.workload }
-        const dateKey = dateToKey(currentDate)
-        workload[dateKey] = slots
-        return { ...doc, workload }
-      }
-      return doc
-    })
-
-    setDoctors(updatedDoctors)
-  }
-
-  const assignRangeSlots = (includeWeekend: boolean) => {
-    if (!selectedDoctor || !selectedRange?.from || !selectedRange.to) return
-
-    const slots: string[] = []
-    for (let hour = 7; hour < 12; hour++) {
-      slots.push(`${hour.toString().padStart(2, "0")}:00`)
-      slots.push(`${hour.toString().padStart(2, "0")}:30`)
-    }
-    for (let hour = 13; hour < 18; hour++) {
-      slots.push(`${hour.toString().padStart(2, "0")}:00`)
-      slots.push(`${hour.toString().padStart(2, "0")}:30`)
-    }
-
-    const updatedDoctors = doctors.map((doc) => {
-      if (doc.id === selectedDoctor.id) {
-        const workload = { ...doc.workload }
-        const current = new Date(selectedRange.from!)
-        const to = new Date(selectedRange.to!)
-        while (current <= to) {
-          if (includeWeekend || (current.getDay() !== 0 && current.getDay() !== 6)) {
-            workload[dateToKey(current)] = slots
-          }
-          current.setDate(current.getDate() + 1)
-        }
-        return { ...doc, workload }
-      }
-      return doc
-    })
-
-    setDoctors(updatedDoctors)
-  }
-
-  const cancelRangeSlots = () => {
-    if (!selectedDoctor) return
-
-    const updatedDoctors = doctors.map((doc) => {
-      if (doc.id === selectedDoctor.id) {
-        const workload = { ...doc.workload }
-
-        if (calendarMode === "range" && selectedRange?.from && selectedRange.to) {
-          // Handle range cancel
-          const current = new Date(selectedRange.from)
-          const to = new Date(selectedRange.to)
-          while (current <= to) {
-            delete workload[dateToKey(current)]
-            current.setDate(current.getDate() + 1)
-          }
-        } else if (calendarMode === "single" && selectedDate) {
-          // Handle single date cancel
-          const dateKey = dateToKey(selectedDate)
-          delete workload[dateKey]
-        }
-
-        return { ...doc, workload }
-      }
-      return doc
-    })
-
-    setDoctors(updatedDoctors)
-
-    // Clear slots + reset states
-    setCurrentDate(null)
-    setSelectedSlots([])
-    setSelectedDate(undefined)
-    setSelectedRange(undefined)
-  }
-
-  const assignDefaultDateSlots = () => {
-    if (!selectedDoctor || !selectedDate) {
-      alert("Please select a doctor and date first.")
-      return
-    }
-
-    const slots: string[] = []
-    for (let hour = 7; hour < 12; hour++) {
-      slots.push(`${hour.toString().padStart(2, "0")}:00`)
-      slots.push(`${hour.toString().padStart(2, "0")}:30`)
-    }
-    for (let hour = 13; hour < 18; hour++) {
-      slots.push(`${hour.toString().padStart(2, "0")}:00`)
-      slots.push(`${hour.toString().padStart(2, "0")}:30`)
-    }
-
-    updateDoctorWorkload(slots)
-    setSelectedSlots(slots) // Update selectedSlots for UI feedback
-    setIsDirty(false) // Reset dirty state if needed
-  }
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
 
   return (
-    <div className="container mx-auto py-8 px-1">
-      <h1 className="text-3xl font-bold mb-8">Doctor Schedule Management</h1>
+    <div className="container mx-auto px-1 py-8">
+      <h1 className="mb-8 text-3xl font-bold">Doctor Schedule Management</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Doctor List */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        {/* Doctor List - Use actual component wrapped in Suspense */}
         <div className="lg:col-span-3">
-          <DoctorList
-            doctors={doctors}
-            selectedDoctorId={selectedDoctorId}
-            onSelectDoctor={(id) => {
-              setSelectedDoctorId(id)
-              setSelectedDate(undefined)
-              setSelectedRange(undefined)
-              setSelectedSlots([])
-              setCurrentDate(null)
-            }}
-          />
+          {/* Wrap DoctorList in Suspense */}
+          <Suspense fallback={<DoctorListFallback />}>
+            <DoctorList
+              selectedDoctorId={selectedDoctorId}
+              onSelectDoctor={(id) => {
+                // Avoid selecting the same doctor again if already selected
+                if (id !== selectedDoctorId) {
+                  setSelectedDoctorId(id);
+                  // State resets (date, range, pending) are handled in useEffect [selectedDoctorId]
+                }
+              }}
+              // Optionally pass maxVisibleDoctors if needed
+              // maxVisibleDoctors={8}
+            />
+          </Suspense>
         </div>
 
-        {selectedDoctor ? (
-          <>
-            {/* Calendar */}
-            <div className="lg:col-span-3">
-              <CalendarStaff
-                calendarMode={calendarMode}
-                setCalendarMode={setCalendarMode}
-                selectedDate={selectedDate}
-                selectedRange={selectedRange}
-                onSelectDate={(date) => {
-                  setSelectedDate(date)
-                  if (selectedDoctor && date) {
-                    const dateKey = dateToKey(date)
-                    setSelectedSlots(selectedDoctor.workload[dateKey] || [])
-                    setCurrentDate(date)
-                  } else {
-                    setCurrentDate(null)
-                    setSelectedSlots([])
-                  }
-                }}
-                onSelectRange={(range) => {
-                  setSelectedRange(range)
-                  if (selectedDoctor && range?.from) {
-                    const dateKey = dateToKey(range.from)
-                    setSelectedSlots(selectedDoctor.workload[dateKey] || [])
-                    setCurrentDate(range.from)
-                  } else {
-                    setCurrentDate(null)
-                    setSelectedSlots([])
-                  }
-                }}
-              />
-            </div>
-
-            {/* Controls and Time Slots */}
-            <div className="lg:col-span-6 space-y-6">
-              <AssignControls
-                selectedSlots={selectedSlots}
-                updateDoctorWorkload={updateDoctorWorkload}
-                assignRangeSlots={assignRangeSlots}
-                cancelRangeSlots={cancelRangeSlots}
-                calendarMode={calendarMode}
-                isDirty={isDirty}
-                setIsDirty={setIsDirty}
-                assignDefaultDateSlots={assignDefaultDateSlots}
-              />
-
-              <TimeSlotGrid
-                selectedSlots={selectedSlots}
-                setSelectedSlots={(slots) => {
-                  setSelectedSlots(slots)
-                  setIsDirty(true) // Mark as dirty
-                }}
-                currentDate={currentDate}
-                setCurrentDate={setCurrentDate}
-                workload={selectedDoctor.workload}
-              />
-            </div>
-          </>
+        {/* Right side content (Calendar, Controls, TimeGrid) */}
+        {selectedDoctorId ? (
+          <div className="lg:col-span-9">
+            <StaffShiftCalendar staffId={selectedDoctorId} />
+          </div>
         ) : (
-          <div className="lg:col-span-9 flex items-center justify-center bg-white dark:bg-gray-800 rounded-xl shadow-md p-12">
+          // Placeholder when no doctor is selected
+          <div className="flex items-center justify-center rounded-xl bg-white p-12 shadow-md dark:bg-gray-800 lg:col-span-9">
             <div className="text-center">
-              <div className="bg-primary/10 rounded-full p-6 inline-block mb-4">
+              <div className="mb-4 inline-block rounded-full bg-primary/10 p-6">
                 <UserRound className="h-12 w-12 text-primary" />
               </div>
-              <h2 className="text-2xl font-semibold mb-2">No Doctor Selected</h2>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                Please select a doctor from the list to view and manage their schedule
+              <h2 className="mb-2 text-2xl font-semibold">
+                No Doctor Selected
+              </h2>
+              <p className="mx-auto max-w-md text-muted-foreground">
+                Please select a doctor from the list to view and manage their
+                schedule.
               </p>
             </div>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }
-
