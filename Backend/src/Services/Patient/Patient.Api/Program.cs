@@ -77,4 +77,14 @@ app.MapGet("/api/patients", () =>
     return Results.Ok(fakePatients);
 });
 
+app.MapGet("/api/patients/{patientId:guid}", (Guid patientId) =>
+{
+    var patient = fakePatients.FirstOrDefault(p => p.Id == patientId);
+    if (patient == null)
+    {
+        return Results.NotFound();
+    }
+    return Results.Ok(patient);
+});
+
 app.Run();

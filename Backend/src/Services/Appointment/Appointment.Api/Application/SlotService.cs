@@ -1,13 +1,15 @@
 ﻿using Appointments.Api.Application.Interfaces;
 using Appointments.Api.Domain.Entities.TimeSlots;
 using Appointments.Api.Domain.Enums;
+using MassTransit.Initializers;
+using MassTransit.NewIdProviders;
 
 namespace Appointments.Api.Application;
 
 public class SlotService(ISlotRepo slotRepo) : ISlotService
 {
     public const int SlotSpan = 30; // in minutes
-    public async Task<TimeSlot> GetSlotById(Guid slotId)
+    public async Task<SlotDetailResponse> GetSlotById(Guid slotId)
     {
         var slot = await slotRepo.GetById(slotId);
         if (slot is null)
@@ -15,12 +17,12 @@ public class SlotService(ISlotRepo slotRepo) : ISlotService
             throw new Exception("Slot not found");
         }
 
-        return slot;
+        return new SlotDetailResponse(slot.Id, slot.StartTime, slot.EndTime, slot.Status.ToString(), slot.DoctorId);
     }
 
-    public async Task<List<TimeSlot>> GetSlotsByDoctorIdAndDate(Guid doctorId, DateTime date)
+    public async Task<List<SlotDetailResponse>> GetSlotsByDoctorIdAndDate(Guid doctorId, DateTime date)
     {
-        return await slotRepo.GetByDoctorIdAndDate(doctorId, date);
+        return (await slotRepo.GetByDoctorIdAndDate(doctorId, date)).Select(s => new SlotDetailResponse(s.Id, s.StartTime, s.EndTime, s.Status.ToString(), s.DoctorId)).ToList();
     }
     
     public async Task CreateSlots(Guid doctorId, DateTime startTime, DateTime endTime)

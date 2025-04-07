@@ -6,6 +6,13 @@ namespace Appointments.Api.Controllers;
 [Route("api/appointments")]
 public class AppointmentController(IAppointmentService appointmentService) : ControllerBase
 {
+    [HttpGet]
+    public async Task<IResult> GetAll([FromQuery] Guid? doctorId, [FromQuery] Guid? patientId, [FromQuery] DateTime? date)
+    {
+        var appointments = await appointmentService.GetAll(doctorId, patientId, date);
+
+        return Results.Ok(appointments);
+    }
 
     [HttpPost]
     public async Task<IResult> Create([FromBody] CreateAppointmentRequest req)
