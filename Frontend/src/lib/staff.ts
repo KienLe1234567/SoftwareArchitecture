@@ -2,6 +2,7 @@ import axios from "axios";
 
 import { Doctor, DoctorDto } from "@/types/doctor";
 import { Shift, ShiftDto } from "@/types/shift";
+import { formatToApiIsoString } from "./utils";
 
 export async function getAllStaffs(): Promise<DoctorDto> {
   try {
@@ -65,7 +66,7 @@ export async function registerShifts(
   endTime: string,
   description?: string,
   location?: string
-): Promise<number> {
+): Promise<string> {
   try {
     const payload = { staffId, startTime, endTime, description, location };
     const res = await axios.post(
@@ -77,7 +78,7 @@ export async function registerShifts(
         },
       }
     );
-    return res.status;
+    return res.data.id;
   } catch (error) {
     console.log(error);
     throw new Error("Failed to register shifts for chosen doctor");
@@ -86,9 +87,14 @@ export async function registerShifts(
 
 export async function updateShift(shift: Shift): Promise<number> {
   try {
+    const payload = {
+       ...shift,
+      startTime: formatToApiIsoString(shift.startTime),
+      endTime: formatToApiIsoString(shift.endTime), 
+    };
     const res = await axios.put(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/staffs/${shift.staffId}/shifts/${shift.id}`,
-      shift,
+      payload,
       {
         headers: {
           "Content-Type": "application/json",
