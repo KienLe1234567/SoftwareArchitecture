@@ -73,6 +73,11 @@ public class StaffService(
             throw new Exception("Staff not found");
         }
 
+        if (staff.Shifts.Any(s => s.StartTime <= req.EndTime && s.EndTime >= req.StartTime))
+        {
+            throw new Exception("Shift time conflict");
+        }
+
         var shift = new Shift
         {
             StaffId = req.StaffId,
@@ -115,12 +120,22 @@ public class StaffService(
             throw new Exception("Shift not found");
         }
 
+        if (staff.Shifts.Any(s => s.Id != req.Id && s.StartTime <= req.EndTime && s.EndTime >= req.StartTime))
+        {
+            throw new Exception("Shift time conflict");
+        }
+
         shift.StartTime = req.StartTime;
         shift.EndTime = req.EndTime;
         shift.Description = req.Description;
         shift.Location = req.Location;
 
         await staffRepo.SaveChangesAsync();
+
+        await publishEndpoint.Publish(new DoctorShiftUpdatedEvent(
+            staff.Id,
+            shift.StartTime,
+            shift.EndTime));
     }
 
     public async Task DeleteShift(Guid staffId, Guid shiftId)
@@ -140,5 +155,10 @@ public class StaffService(
 
         staff.Shifts.Remove(shift);
         await staffRepo.SaveChangesAsync();
+
+        await publishEndpoint.Publish(new DoctorShiftDeletedEvent(
+            staff.Id,
+            shift.StartTime,
+            shift.EndTime));
     }
 }
