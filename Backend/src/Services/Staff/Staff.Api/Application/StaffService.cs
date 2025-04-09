@@ -131,11 +131,6 @@ public class StaffService(
         shift.Location = req.Location;
 
         await staffRepo.SaveChangesAsync();
-
-        await publishEndpoint.Publish(new DoctorShiftUpdatedEvent(
-            staff.Id,
-            shift.StartTime,
-            shift.EndTime));
     }
 
     public async Task DeleteShift(Guid staffId, Guid shiftId)
@@ -155,10 +150,5 @@ public class StaffService(
 
         staff.Shifts.Remove(shift);
         await staffRepo.SaveChangesAsync();
-
-        await publishEndpoint.Publish(new DoctorShiftDeletedEvent(
-            staff.Id,
-            shift.StartTime,
-            shift.EndTime));
     }
 }
