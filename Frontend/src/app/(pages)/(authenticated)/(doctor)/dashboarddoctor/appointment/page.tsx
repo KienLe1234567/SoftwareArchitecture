@@ -18,7 +18,7 @@ import {
 
 // --- API và Types ---
 // Thay đổi đường dẫn import nếu cần
-import { getAppointments, GetAppointmentsParams } from "@/lib/appointment";
+import { getAppointments, GetAppointmentsParams } from "@/lib/appointment2";
 import { Appointment } from "@/types/appointment";
 import { cn } from "@/lib/utils"; // Hàm tiện ích classnames của Shadcn UI
 
