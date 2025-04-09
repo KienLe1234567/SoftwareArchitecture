@@ -54,3 +54,26 @@ export async function getSlotsByDoctorAndDate(doctorId: string, date: string): P
       console.error("Failed to get appointments:", error);
       throw new Error("Failed to get appointments");
     }}
+
+export async function completeAppointment(id: string): Promise<number> {
+    try {
+        const res = await axios.post(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/appointments-api/api/appointments/${id}/complete`
+        );
+        return res.status;
+    } catch (error) {
+        console.error(error);
+        throw new Error("Failed to complete appointment");
+    }
+}
+export async function confirmAppointment(id: string): Promise<number> {
+    try {
+        const res = await axios.post(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/appointments-api/api/appointments/${id}/confirm`
+        );
+        return res.status;
+    } catch (error) {
+        console.error(error);
+        throw new Error("Failed to confirm appointment");
+    }
+}
