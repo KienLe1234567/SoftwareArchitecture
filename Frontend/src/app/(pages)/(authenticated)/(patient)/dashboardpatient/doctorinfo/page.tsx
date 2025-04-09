@@ -3,43 +3,37 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-// Dòng hiển thị thông tin trong modal
-// function InfoRow({ label, value }: { label: string, value: string }) {
-//     return (
-//         <div className="flex justify-between border-b pb-1">
-//             <span className="font-medium text-gray-600">{label}:</span>
-//             <span className="text-gray-800">{value}</span>
-//         </div>
-//     );
-// }
-
 export default function DateComponent() {
     const [today, setToday] = useState("");
-    // const [showInfoModal, setShowInfoModal] = useState(false);
     const [doctors, setDoctors] = useState<{
         id: string;
         name: string;
         email: string;
-        specialty: string;
+        phoneNumber: string;
     }[]>([]);
+    const [searchQuery, setSearchQuery] = useState("");
+
 
     useEffect(() => {
         const currentDate = new Date().toISOString().split("T")[0];
         setToday(currentDate);
 
-        // Giả sử đây là dữ liệu bác sĩ từ backend
-        const doctorData = [
-            {
-                id: "D-1",
-                name: "Test Doctor",
-                email: "doctor@edoc.com",
-                specialty: "Accident and emergen"
-            },
-            // Bạn có thể thêm nhiều bác sĩ khác ở đây
-        ];
+        const fetchDoctors = async () => {
+            try {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/staffs`);
+                const data = await response.json();
+                setDoctors(data.staffs);
+            } catch (error) {
+                console.error("Error fetching doctors:", error);
+            }
+        };
 
-        setDoctors(doctorData);
+        fetchDoctors();
     }, []);
+
+    const filteredDoctors = doctors.filter(doctor =>
+        doctor.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <div>
@@ -57,46 +51,28 @@ export default function DateComponent() {
                         <img src="/calendar.svg" className="w-6 h-6" alt="Calendar Icon" />
                     </div>
                 </div>
-
             </div>
 
             <div className="p-6">
-                <h2 className="text-2xl font-semibold mb-4">All Doctors ({doctors.length})</h2>
+                <h2 className="text-2xl font-semibold mb-4">All Doctors ({filteredDoctors.length})</h2>
 
-                {/* Search Bar for Patient Name */}
+                {/* Search Bar for Doctor Name */}
                 <div className="flex items-center gap-4 mb-4 justify-center">
-                    {/* Input: Patient name */}
+                    {/* Input: Doctor name */}
                     <div className="flex items-center gap-2">
-                        <label htmlFor="patientName" className="text-gray-600 font-medium">Doctor Name:</label>
+                        <label htmlFor="doctorName" className="text-gray-600 font-medium">Doctor Name:</label>
                         <input
                             type="text"
                             id="doctorName"
                             placeholder="Enter doctor name"
                             className="border-2 rounded px-3 py-2 text-sm w-64"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
 
-                    {/* Search Button */}
-                    <button className="flex items-center gap-2 bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-md font-medium">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5 text-blue-700"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"
-                            />
-                        </svg>
-                        Search
-                    </button>
-
                     {/* Clear Button */}
-                    <button className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium">
+                    <button className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium" onClick={() => setSearchQuery("")}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             className="h-5 w-5 text-gray-800"
@@ -115,8 +91,6 @@ export default function DateComponent() {
                     </button>
                 </div>
 
-
-
                 {/* Doctor Table */}
                 <div className="border-2 rounded-lg overflow-hidden">
                     <table className="w-full table-fixed" style={{ borderCollapse: "separate" }}>
@@ -124,16 +98,16 @@ export default function DateComponent() {
                             <tr className="text-center text-sm" style={{ borderColor: "#0a76d8" }}>
                                 <th className="px-4 py-3 border-b-2 border-blue-500">Doctor Name</th>
                                 <th className="px-4 py-3 border-b-2 border-blue-500">Email</th>
-                                <th className="px-4 py-3 border-b-2 border-blue-500">Specialties</th>
+                                <th className="px-4 py-3 border-b-2 border-blue-500">Phone Number</th>
                                 <th className="px-4 py-3 border-b-2 border-blue-500">Events</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {doctors.map((doctor, index) => (
+                            {filteredDoctors.map((doctor, index) => (
                                 <tr key={index} className="border-t text-center">
                                     <td className="px-4 py-3 font-medium">{doctor.name}</td>
                                     <td className="px-4 py-3">{doctor.email}</td>
-                                    <td className="px-4 py-3">{doctor.specialty}</td>
+                                    <td className="px-4 py-3">{doctor.phoneNumber}</td>
                                     <td className="px-4 py-3">
                                         <div className="flex gap-2 justify-center">
                                             <Link href="./doctorView">
@@ -144,7 +118,7 @@ export default function DateComponent() {
                                                     View
                                                 </button>
                                             </Link>
-                                            <Link href="./doctorSessions">
+                                            <Link href={`./doctorSessions/${doctor.id}`}>
                                                 <button className="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-md">
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10m-12 4h14M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -159,45 +133,7 @@ export default function DateComponent() {
                         </tbody>
                     </table>
                 </div>
-
             </div>
-
-            {/* MODAL
-            {showInfoModal && selectedPatient && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                    <div className="bg-white w-full max-w-md rounded-xl shadow-lg p-6 relative">
-                        <button
-                            className="absolute top-3 right-3 text-gray-500 hover:text-black"
-                            onClick={() => setShowInfoModal(false)}
-                        >
-                            ✕
-                        </button>
-
-                        <h2 className="text-xl font-semibold mb-4">View Patient Info</h2>
-
-                        <div className="space-y-3 text-sm">
-                            <InfoRow label="Patient ID" value={selectedPatient.id} />
-                            <InfoRow label="Name" value={selectedPatient.name} />
-                            <InfoRow label="Age" value={selectedPatient.age} />
-                            <InfoRow label="Date of Birth" value={selectedPatient.dob} />
-                            <InfoRow label="Gender" value={selectedPatient.gender} />
-                            <InfoRow label="Phone Number" value={selectedPatient.phone} />
-                            <InfoRow label="Address" value={selectedPatient.address} />
-                        </div>
-
-                        <div className="flex justify-end gap-2 mt-6">
-                            <button className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium">
-                                Edit Info
-                            </button>
-                            <button
-                                onClick={() => setShowInfoModal(false)}
-                                className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-md font-medium">
-                                OK
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )} */}
 
             {/* Floating Add Patient Button */}
             <Link href="./addPatient">
@@ -218,7 +154,6 @@ export default function DateComponent() {
                     </span>
                 </div>
             </Link>
-
         </div>
     )
 }

@@ -4,6 +4,10 @@ import { Doctor, DoctorDto } from "@/types/doctor";
 import { Shift, ShiftDto } from "@/types/shift";
 import { formatToApiIsoString } from "./utils";
 
+/**
+ * Lấy danh sách tất cả nhân viên từ API
+ * @returns Promise<DoctorDto> - Dữ liệu trả về từ API
+ */
 export async function getAllStaffs(): Promise<DoctorDto> {
   try {
     const res = await axios.get(
@@ -17,6 +21,11 @@ export async function getAllStaffs(): Promise<DoctorDto> {
   }
 }
 
+/**
+ * Lấy danh sách ca làm việc của một nhân viên cụ thể
+ * @param id - ID của nhân viên
+ * @returns Promise<ShiftDto> - Dữ liệu ca làm việc của nhân viên
+ */
 export async function getStaffShifts(id: string): Promise<ShiftDto> {
   try {
     const res = await axios.get(
@@ -29,6 +38,11 @@ export async function getStaffShifts(id: string): Promise<ShiftDto> {
   }
 }
 
+/**
+ * Lấy thông tin chi tiết của một nhân viên theo ID
+ * @param id - ID của nhân viên
+ * @returns Promise<Doctor> - Thông tin chi tiết của nhân viên
+ */
 export async function getStaffByID(id: string): Promise<Doctor> {
   try {
     const res = await axios.get(
@@ -41,6 +55,11 @@ export async function getStaffByID(id: string): Promise<Doctor> {
   }
 }
 
+/**
+ * Đăng ký thông tin nhân viên mới
+ * @param doctor - Thông tin nhân viên cần đăng ký
+ * @returns Promise<number> - Status code trả về từ API
+ */
 export async function registerStaff(doctor: Doctor): Promise<number> {
   try {
     const res = await axios.post(
@@ -60,6 +79,15 @@ export async function registerStaff(doctor: Doctor): Promise<number> {
   }
 }
 
+/**
+ * Đăng ký ca làm việc mới cho nhân viên
+ * @param staffId - ID của nhân viên
+ * @param startTime - Thời gian bắt đầu ca
+ * @param endTime - Thời gian kết thúc ca
+ * @param description - Mô tả ca làm việc (tùy chọn)
+ * @param location - Địa điểm làm việc (tùy chọn)
+ * @returns Promise<string> - ID của ca làm việc mới được tạo
+ */
 export async function registerShifts(
   staffId: string,
   startTime: string,
@@ -85,12 +113,17 @@ export async function registerShifts(
   }
 }
 
+/**
+ * Cập nhật thông tin ca làm việc
+ * @param shift - Thông tin ca làm việc cần cập nhật
+ * @returns Promise<number> - Status code trả về từ API
+ */
 export async function updateShift(shift: Shift): Promise<number> {
   try {
     const payload = {
-       ...shift,
+      ...shift,
       startTime: formatToApiIsoString(shift.startTime),
-      endTime: formatToApiIsoString(shift.endTime), 
+      endTime: formatToApiIsoString(shift.endTime),
     };
     const res = await axios.put(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/staffs/${shift.staffId}/shifts/${shift.id}`,
@@ -109,6 +142,12 @@ export async function updateShift(shift: Shift): Promise<number> {
   }
 }
 
+/**
+ * Xóa ca làm việc
+ * @param staffId - ID của nhân viên
+ * @param shiftId - ID của ca làm việc cần xóa
+ * @returns Promise<number> - Status code trả về từ API
+ */
 export async function deleteShift(
   staffId: string,
   shiftId: string
@@ -124,6 +163,11 @@ export async function deleteShift(
   }
 }
 
+/**
+ * Cập nhật thông tin nhân viên
+ * @param doctor - Thông tin nhân viên cần cập nhật
+ * @returns Promise<number> - Status code trả về từ API
+ */
 export async function updateStaff(doctor: Doctor): Promise<number> {
   try {
     const res = await axios.put(
@@ -143,6 +187,11 @@ export async function updateStaff(doctor: Doctor): Promise<number> {
   }
 }
 
+/**
+ * Xóa nhân viên
+ * @param id - ID của nhân viên cần xóa
+ * @returns Promise<number> - Status code trả về từ API
+ */
 export async function deleteStaff(id: string): Promise<number> {
   try {
     const res = await axios.delete(

@@ -1,6 +1,6 @@
 "use client";
 
-import type React from "react";
+import { Dispatch, SetStateAction } from "react";
 
 import { cn } from "@/lib/utils";
 import { Clock } from "lucide-react";
@@ -8,13 +8,13 @@ import { Clock } from "lucide-react";
 
 interface Props {
   selectedSlots: string[]
-  setSelectedSlots: React.Dispatch<React.SetStateAction<string[]>>
+  setSelectedSlots: Dispatch<SetStateAction<string[]>>
   currentDate: Date
-  setCurrentDate: React.Dispatch<React.SetStateAction<Date>>
-  workload: Record<string, string[]>
+  setCurrentDate: Dispatch<SetStateAction<Date>>
+  availableSlots: Record<string, string[]>
 }
 
-export default function TimeSlotGrid({ selectedSlots, setSelectedSlots, currentDate, workload }: Props) {
+export default function TimeSlotGrid({ selectedSlots, setSelectedSlots, currentDate, setCurrentDate, availableSlots }: Props) {
   // Generate time slots
   const morningSlots = []
   const afternoonSlots = []
