@@ -32,30 +32,38 @@ export default function LoginPage() {
     setIsLoading(false);
 
     // Example validation
-    if (email && password && email === "user@gmail.com" && password === "123456") {
+    if (email && password && email === "staff@gmail.com" && password === "123456") {
       localStorage.setItem("email", email);
       toast({
         variant: "success",
         title: "Login Successful",
         description: "Welcome back!",
       });
-      localStorage.setItem("loginrole","officer");
+      localStorage.setItem("loginrole","staff");
       router.push("/"); // Redirect to dashboarddashboard/homepage
-    }//  else if (email && password && email === "admin@gmail.com" && password === "123456") {
-    //   toast({
-    //     variant: "success",
-    //     title: "Login Successful",
-    //     description: "Welcome back Admin!",
-    //   });
-    //   localStorage.setItem("loginrole","admin");
-    //   router.push("/"); // Redirect to dashboarddashboard/homepage
-    // }  else {
-    //   toast({
-    //     title: "Login Failed",
-    //     description: "Please check your email and password.",
-    //     variant: "destructive",
-    //   });
-    // }
+    }  else if (email && password && email === "doctor@gmail.com" && password === "123456") {
+      toast({
+        variant: "success",
+        title: "Login Successful",
+        description: "Welcome back!",
+      });
+      localStorage.setItem("loginrole","doctor");
+      router.push("/"); // Redirect to dashboarddashboard/homepage
+    } else if (email && password && email === "patient@gmail.com" && password === "123456") {
+      toast({
+        variant: "success",
+        title: "Login Successful",
+        description: "Welcome back!",
+      });
+      localStorage.setItem("loginrole","patient");
+      router.push("/"); // Redirect to dashboarddashboard/homepage
+    } else {
+      toast({
+        title: "Login Failed",
+        description: "Please check your email and password.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

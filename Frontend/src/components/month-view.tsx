@@ -1,27 +1,28 @@
+// month-view.tsx
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-
 import {
   addDays,
   eachDayOfInterval,
   endOfMonth,
   endOfWeek,
   format,
+  isBefore, // <-- Đã thêm
   isSameDay,
   isSameMonth,
   isToday,
+  startOfDay, // <-- Đã thêm
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useEventVisibility } from "@/hooks/use-event-visibility";
-
+import { cn } from "@/lib/utils"; // <-- Đảm bảo đã import
 import { CalendarEvent } from "../types/types";
 import { EventGap, EventHeight } from "./constants";
 import { DraggableEvent } from "./draggable-event";
@@ -88,6 +89,10 @@ export function MonthView({
     setIsMounted(true);
   }, []);
 
+  // --- Thay đổi bắt đầu ---
+  const today = useMemo(() => startOfDay(new Date()), []);
+  // --- Thay đổi kết thúc ---
+
   return (
     <>
       <div className="grid grid-cols-7 border-b border-border/70">
@@ -125,10 +130,19 @@ export function MonthView({
                 ? allDayEvents.length - visibleCount
                 : 0;
 
+              // --- Thay đổi bắt đầu ---
+              const isPastDay = isBefore(day, today);
+              // --- Thay đổi kết thúc ---
+
               return (
                 <div
                   key={day.toString()}
-                  className="data-outside-cell:bg-muted/25 data-outside-cell:text-muted-foreground/70 group border-b border-r border-border/70 last:border-r-0"
+                  // --- Thay đổi bắt đầu ---
+                  className={cn(
+                    "data-outside-cell:bg-muted/25 data-outside-cell:text-muted-foreground/70 group border-b border-r border-border/70 last:border-r-0",
+                    isPastDay && !isToday(day) && "bg-rose-50" // Áp dụng style nếu là ngày quá khứ (và không phải hôm nay)
+                  )}
+                  // --- Thay đổi kết thúc ---
                   data-today={isToday(day) || undefined}
                   data-outside-cell={!isCurrentMonth || undefined}
                 >
@@ -148,63 +162,64 @@ export function MonthView({
                       ref={isReferenceCell ? contentRef : null}
                       className="min-h-[calc((var(--event-height)+var(--event-gap))*2)] sm:min-h-[calc((var(--event-height)+var(--event-gap))*3)] lg:min-h-[calc((var(--event-height)+var(--event-gap))*4)]"
                     >
+                      {/* Phần render event giữ nguyên */}
                       {sortEvents(allDayEvents).map((event, index) => {
-                        const eventStart = new Date(event.start);
-                        const eventEnd = new Date(event.end);
-                        const isFirstDay = isSameDay(day, eventStart);
-                        const isLastDay = isSameDay(day, eventEnd);
+                         const eventStart = new Date(event.start);
+                         const eventEnd = new Date(event.end);
+                         const isFirstDay = isSameDay(day, eventStart);
+                         const isLastDay = isSameDay(day, eventEnd);
 
-                        const isHidden =
-                          isMounted && visibleCount && index >= visibleCount;
+                         const isHidden =
+                           isMounted && visibleCount && index >= visibleCount;
 
-                        if (!visibleCount) return null;
+                         if (!visibleCount) return null;
 
-                        if (!isFirstDay) {
-                          return (
-                            <div
-                              key={`spanning-${event.id}-${day.toISOString().slice(0, 10)}`}
-                              className="aria-hidden:hidden"
-                              aria-hidden={isHidden ? "true" : undefined}
-                            >
-                              <EventItem
-                                onClick={(e) => handleEventClick(event, e)}
-                                event={event}
-                                view="month"
-                                isFirstDay={isFirstDay}
-                                isLastDay={isLastDay}
-                              >
-                                <div className="invisible" aria-hidden={true}>
-                                  {!event.allDay && (
-                                    <span>
-                                      {format(
-                                        new Date(event.start),
-                                        "h:mm"
-                                      )}{" "}
-                                    </span>
-                                  )}
-                                  {event.title}
-                                </div>
-                              </EventItem>
-                            </div>
-                          );
-                        }
+                         if (!isFirstDay) {
+                           return (
+                             <div
+                               key={`spanning-${event.id}-${day.toISOString().slice(0, 10)}`}
+                               className="aria-hidden:hidden"
+                               aria-hidden={isHidden ? "true" : undefined}
+                             >
+                               <EventItem
+                                 onClick={(e) => handleEventClick(event, e)}
+                                 event={event}
+                                 view="month"
+                                 isFirstDay={isFirstDay}
+                                 isLastDay={isLastDay}
+                               >
+                                 <div className="invisible" aria-hidden={true}>
+                                   {!event.allDay && (
+                                     <span>
+                                       {format(
+                                         new Date(event.start),
+                                         "h:mm"
+                                       )}{" "}
+                                     </span>
+                                   )}
+                                   {event.title}
+                                 </div>
+                               </EventItem>
+                             </div>
+                           );
+                         }
 
-                        return (
-                          <div
-                            key={event.id}
-                            className="aria-hidden:hidden"
-                            aria-hidden={isHidden ? "true" : undefined}
-                          >
-                            <DraggableEvent
-                              event={event}
-                              view="month"
-                              onClick={(e) => handleEventClick(event, e)}
-                              isFirstDay={isFirstDay}
-                              isLastDay={isLastDay}
-                            />
-                          </div>
-                        );
-                      })}
+                         return (
+                           <div
+                             key={event.id}
+                             className="aria-hidden:hidden"
+                             aria-hidden={isHidden ? "true" : undefined}
+                           >
+                             <DraggableEvent
+                               event={event}
+                               view="month"
+                               onClick={(e) => handleEventClick(event, e)}
+                               isFirstDay={isFirstDay}
+                               isLastDay={isLastDay}
+                             />
+                           </div>
+                         );
+                       })}
 
                       {hasMore && (
                         <Popover modal>
