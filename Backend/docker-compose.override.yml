@@ -39,6 +39,8 @@ services:
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
       - ConnectionStrings__AppointmentConnection=Server=sqlserver;Database=HospitalManagement;User Id=sa;Password=L0c@lpassword;TrustServerCertificate=True;MultiSubnetFailover=True;
+      - Services__PatientApi=http://patient.api:8080
+      - Services__StaffApi=http://staff.api:8080
     depends_on:
       - sqlserver
     networks:

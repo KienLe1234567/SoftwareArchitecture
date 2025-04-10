@@ -10,9 +10,8 @@ public record AppointmentDetailResponse(
     string Status,
     Guid PatientId,
     string PatientName,
-    string PatientPhoneNumber,
-    string PatientEmail
-);
+    Guid DoctorId,
+    string DoctorName);
 
 public record CreateAppointmentResponse(
     Guid Id);
