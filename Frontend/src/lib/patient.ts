@@ -22,6 +22,7 @@ export async function getPatients(): Promise<PatientDto> {
  * @param id - ID của bệnh nhân
  * @returns Promise<Patient> - Thông tin chi tiết của bệnh nhân
  */
+
 export async function getPatientById(id: string): Promise<Patient> {
     try {
         const res = await axios.get(

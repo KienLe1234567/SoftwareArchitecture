@@ -1,16 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { Slot } from "@/types/slot";
 import { Clock } from "lucide-react";
 import { Dispatch, SetStateAction } from "react";
-
-interface Slot {
-  id: string;
-  startTime: string;
-  endTime: string;
-  doctorId: string;
-  status: number;
-}
 
 interface Props {
   selectedSlots: string[];
@@ -27,21 +20,8 @@ export default function TimeSlotGrid({
   setCurrentDate,
   slots,
 }: Props) {
-  const morningSlots: string[] = [];
-  const afternoonSlots: string[] = [];
-
-  for (let hour = 7; hour < 12; hour++) {
-    morningSlots.push(`${hour.toString().padStart(2, "0")}:00`);
-    morningSlots.push(`${hour.toString().padStart(2, "0")}:30`);
-  }
-
-  for (let hour = 13; hour < 19; hour++) {
-    afternoonSlots.push(`${hour.toString().padStart(2, "0")}:00`);
-    afternoonSlots.push(`${hour.toString().padStart(2, "0")}:30`);
-  }
-
-  const handleSlotClick = (slot: string) => {
-    setSelectedSlots([slot]);
+  const handleSlotClick = (slotId: string) => {
+    setSelectedSlots([slotId]);
   };
 
   const formatDate = (date: Date) => {
@@ -53,32 +33,44 @@ export default function TimeSlotGrid({
     }).format(date);
   };
 
-  const isSlotAvailable = (slotTime: string): boolean => {
-    return slots.some((s) => {
-      const time = new Date(s.startTime).toTimeString().slice(0, 5);
-      return time === slotTime;
-    });
+  const formatTime = (datetime: string): string => {
+    const date = new Date(datetime);
+    return date.toTimeString().slice(0, 5); // HH:MM
   };
 
-  const renderSlotButtons = (slotsList: string[]) =>
-    slotsList.map((slot) => {
-      const disabled = !isSlotAvailable(slot);
+  // 👉 Phân loại slot theo sáng / chiều
+  const morningSlots = slots.filter((slot) => {
+    const hour = new Date(slot.startTime).getHours();
+    return hour >= 7 && hour < 12;
+  });
+
+  const afternoonSlots = slots.filter((slot) => {
+    const hour = new Date(slot.startTime).getHours();
+    return hour >= 13 && hour < 19;
+  });
+
+  const renderSlotButtons = (slotList: Slot[]) =>
+    slotList.map((slot) => {
+      const time = formatTime(slot.startTime);
+      const isSelected = selectedSlots.includes(slot.id);
+      const isAvailable = slot.status === "AVAILABLE";
+
       return (
         <button
-          key={slot}
-          onClick={() => handleSlotClick(slot)}
-          disabled={disabled}
+          key={slot.id}
+          onClick={() => handleSlotClick(slot.id)}
+          disabled={!isAvailable}
           className={cn(
             "py-3 px-4 rounded-lg border-2 transition-all duration-150",
             "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
             "font-medium text-sm",
-            selectedSlots.includes(slot)
+            isSelected
               ? "bg-primary text-primary-foreground border-primary"
               : "bg-background border-border hover:bg-muted/50",
-            disabled && "opacity-50 cursor-not-allowed"
+            !isAvailable && "opacity-50 cursor-not-allowed"
           )}
         >
-          {slot}
+          {time}
         </button>
       );
     });

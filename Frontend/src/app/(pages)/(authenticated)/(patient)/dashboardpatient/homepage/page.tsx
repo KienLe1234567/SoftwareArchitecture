@@ -1,5 +1,7 @@
 "use client";
 
+import { getPatientById } from "@/lib/patient";
+import { getAllStaffs } from "@/lib/staff";
 import { Doctor } from "@/types/doctor";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -9,6 +11,11 @@ export default function DateComponent() {
     const [today, setToday] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [doctor, setDoctor] = useState<Doctor | null>(null); // Sử dụng interface Doctor
+    // 🆕 Thêm state cho tên bệnh nhân
+    const [patientName, setPatientName] = useState<string>("");
+
+    const patientID = "a2559b6b-0ca9-4d88-90b8-9565386339c0";
+
 
     useEffect(() => {
         const currentDate = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
@@ -21,8 +28,7 @@ export default function DateComponent() {
     useEffect(() => {
         const fetchDoctorData = async () => {
             try {
-                const response = await fetch('http://localhost:7000/staffs-api/api/staffs'); // Cập nhật URL API để lấy danh sách bác sĩ
-                const data = await response.json();
+                const data = await getAllStaffs();
                 setDoctors(data.staffs); // Giả sử dữ liệu trả về có cấu trúc { staffs: [...] }
 
                 // Lấy thông tin bác sĩ đầu tiên để hiển thị
@@ -40,7 +46,16 @@ export default function DateComponent() {
                 console.error("Error fetching doctors:", error);
             }
         };
+        const fetchPatient = async () => {
+            try {
+                const patient = await getPatientById(patientID);
+                setPatientName(patient.name);
+            } catch (error) {
+                console.error("Error fetching patient:", error);
+            }
+        };
 
+        fetchPatient();
         fetchDoctorData();
     }, []);
 
@@ -95,7 +110,7 @@ export default function DateComponent() {
                 <div className="relative z-10 h-full flex items-center justify-start pl-10">
                     <div className="text-left max-w-xl">
                         <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome!</h2>
-                        <h1 className="text-4xl font-bold text-gray-900 mb-4">{doctor?.name}</h1>
+                        <h1 className="text-4xl font-bold text-gray-900 mb-4">{patientName ? `, ${patientName}` : "Patient"}</h1>
                         <p className="text-gray-700 mb-6">
                             Haven't any idea about doctors? No problem, let's jump to <strong>"All Doctors"</strong> section or <strong>"Sessions"</strong>.<br />
                             Track your past and future appointments history.<br />

@@ -1,27 +1,7 @@
+import { Appointment } from "@/types/appointment";
+import { Slot } from "@/types/slot";
 import axios from "axios";
 
-// Định nghĩa các kiểu dữ liệu (nếu cần)
-interface Slot {
-    // Định nghĩa các thuộc tính của Slot
-    id: string;
-    startTime: string;
-    endTime: string;
-    doctorId: string;
-    status: number;
-}
-
-interface Appointment {
-    // Định nghĩa các thuộc tính của Appointment
-    id: string;
-    slotId: string;
-    patientId: string;
-    // ... các thuộc tính khác
-}
-
-interface AppointmentDto {
-    // Định nghĩa các thuộc tính của AppointmentDto nếu có
-    appointments: Appointment[];
-}
 
 /**
  * Lấy danh sách các slot theo doctorId và date.
@@ -109,7 +89,7 @@ export async function getAppointments(
     doctorId?: string,
     patientId?: string,
     date?: string
-): Promise<AppointmentDto> {
+): Promise<Appointment[]> {
     try {
         const res = await axios.get(
             `${process.env.NEXT_PUBLIC_BACKEND_URL}/appointments-api/api/appointments`,
@@ -176,5 +156,14 @@ export async function rescheduleAppointment(id: string): Promise<Appointment> {
     } catch (error) {
         console.error(error);
         throw new Error("Failed to reschedule appointment");
+    }
+}
+
+export async function cancelAppointment(id: string) {
+    try {
+        console.log("Cancel Appointment");
+    } catch (error) {
+        console.error(error);
+        throw new Error("Failed to cancel appointment");
     }
 }

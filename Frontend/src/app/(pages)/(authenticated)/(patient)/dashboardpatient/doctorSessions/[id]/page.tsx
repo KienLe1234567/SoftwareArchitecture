@@ -4,27 +4,12 @@ import DoctorCard from "@/components/DoctorCard";
 import TimeSlotGrid from "@/components/TimeSlotGrid";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { getSlots } from "@/lib/appointment";
+import { createAppointment, getSlots } from "@/lib/appointment";
 import { getAllStaffs } from "@/lib/staff";
+import { Doctor } from "@/types/doctor";
+import { Slot } from "@/types/slot";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
-
-
-interface Slot {
-    id: string;
-    startTime: string;
-    endTime: string;
-    doctorId: string;
-    status: number;
-}
-interface Doctor {
-    id: string;
-    name: string;
-    email: string;
-    phoneNumber: string;
-    address: string;
-}
 
 
 export default function DoctorSessions({ params }: { params: { id: string } }) {
@@ -52,6 +37,10 @@ export default function DoctorSessions({ params }: { params: { id: string } }) {
         try {
             const dateString = date.toLocaleDateString("sv-SE"); // yyyy-MM-dd
             const slots: Slot[] = await getSlots(doctorId, dateString);
+            // slots.forEach(slot => {
+            //     console.log(`SlotId: ${slot.id}`);
+            // });
+
             setSlotsForSelectedDate(slots);
         } catch (error) {
             console.error("Error fetching slots:", error);
@@ -73,10 +62,22 @@ export default function DoctorSessions({ params }: { params: { id: string } }) {
         }
     };
 
-    const handleConfirmSelection = () => {
-        console.log("Selected date:", currentDate);
-        console.log("Selected slots:", selectedSlots);
-        router.push("/dashboardpatient/mySessions");
+    const patientId = "a2559b6b-0ca9-4d88-90b8-9565386339c0";
+
+    const handleConfirmSelection = async () => {
+        if (selectedSlots.length === 0) return;
+
+        try {
+            //console.log(selectedSlots);
+            const slotId = selectedSlots[0]; // chỉ chọn 1 slot để tạo appointment
+            //console.log(`SlotID: ${slotId}`);
+            const data = { slotId, patientId };
+            await createAppointment(data);
+            console.log("Appointment created:", data);
+            router.push("/dashboardpatient/mySessions");
+        } catch (error) {
+            console.error("Error creating appointment:", error);
+        }
     };
 
     return (
@@ -90,15 +91,17 @@ export default function DoctorSessions({ params }: { params: { id: string } }) {
                     <h2 className="text-lg font-semibold mb-4">Doctors</h2>
                     <div className="space-y-4">
                         {doctors.map((doc) => (
-                            <DoctorCard
-                                key={doc.id}
-                                name={doc.name}
-                                email={doc.email}
-                                phoneNumber={doc.phoneNumber}
-                                imageUrl="/avatar.jpg"
-                                isSelected={doc.id === doctorId} // 👈 so sánh để highlight
-                            />
+                            <div key={doc.id} onClick={() => router.push(`/dashboardpatient/doctorSessions/${doc.id}`)}>
+                                <DoctorCard
+                                    name={doc.name}
+                                    email={doc.email}
+                                    phoneNumber={doc.phoneNumber}
+                                    imageUrl="/avatar.jpg"
+                                    isSelected={doc.id === doctorId}
+                                />
+                            </div>
                         ))}
+
 
                     </div>
                 </div>
