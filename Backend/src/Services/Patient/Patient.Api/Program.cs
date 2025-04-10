@@ -1,5 +1,6 @@
 using Microsoft.OpenApi.Models;
 using Patients.Api.Domain.Entities.Patients;
+using Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
     {
         c.SwaggerDoc("v1", new OpenApiInfo { Title = "Patient API", Version = "v1" });
     });
+    builder.Services.AddGlobalExceptionHandling();
 }
 
 List<Patient> fakePatients =
@@ -71,6 +73,8 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Patient API V1");
     });
 }
+
+app.UseGlobalExceptionHandling();
 
 app.MapGet("/api/patients", () =>
 {

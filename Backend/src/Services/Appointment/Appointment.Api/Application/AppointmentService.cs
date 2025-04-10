@@ -3,6 +3,7 @@ using Appointments.Api.Domain.Entities.Appointments;
 using Appointments.Api.Domain.Enums;
 using MassTransit;
 using Shared.Contracts;
+using Shared.Exceptions;
 
 namespace Appointments.Api.Application;
 
@@ -53,25 +54,25 @@ public class AppointmentService : IAppointmentService
         var slot = await _slotRepo.GetById(req.SlotId);
         if (slot is null)
         {
-            throw new Exception("Slot not found");
+            throw new NotFoundException("Slot", req.SlotId.ToString());
         }
 
         if (slot.Status != SlotStatus.AVAILABLE)
         {
-            throw new Exception("Slot is not available");
+            throw new ValidationException("Slot is not available");
         }
 
         // Validate that patient and doctor exist and get their information
         var patient = await _patientService.GetPatientById(req.PatientId);
         if (patient is null)
         {
-            throw new Exception("Patient not found");
+            throw new NotFoundException("Patient", req.PatientId.ToString());
         }
 
         var doctor = await _staffService.GetStaffById(slot.DoctorId);
         if (doctor is null)
         {
-            throw new Exception("Doctor not found");
+            throw new NotFoundException("Doctor", slot.DoctorId.ToString());
         }
 
         Appointment appointment = new()
@@ -97,7 +98,7 @@ public class AppointmentService : IAppointmentService
 
         if (appointment is null)
         {
-            throw new Exception("Appointment not found");
+            throw new NotFoundException("Appointment", appointmentId.ToString());
         }
 
         return new AppointmentDetailResponse(
@@ -118,7 +119,7 @@ public class AppointmentService : IAppointmentService
 
         if (appointment is null)
         {
-            throw new Exception("Appointment not found");
+            throw new NotFoundException("Appointment", req.AppointmentId.ToString());
         }
 
         appointment.SlotId = req.SlotId;
@@ -135,7 +136,7 @@ public class AppointmentService : IAppointmentService
 
         if (appointment is null)
         {
-            throw new Exception("Appointment not found");
+            throw new NotFoundException("Appointment", appointmentId.ToString());
         }
 
         appointment.Status = AppointmentStatus.CANCELLED;
@@ -143,41 +144,42 @@ public class AppointmentService : IAppointmentService
 
         await _appointmentRepo.SaveChangesAsync();
     }
+
     public async Task RescheduleAppointment(Guid appointmentId, Guid newSlotId)
     {
         var appointment = await _appointmentRepo.GetById(appointmentId);
         if (appointment is null)
         {
-            throw new Exception("Appointment not found");
+            throw new NotFoundException("Appointment", appointmentId.ToString());
         }
 
         var newSlot = await _slotRepo.GetById(newSlotId);
         if (newSlot is null)
         {
-            throw new Exception("New slot not found");
+            throw new NotFoundException("Slot", newSlotId.ToString());
         }
 
         if (newSlot.Status != SlotStatus.AVAILABLE)
         {
-            throw new Exception("New slot is not available");
+            throw new ValidationException("New slot is not available");
         }
 
         if (appointment.Status != AppointmentStatus.PENDING)
         {
-            throw new Exception("Cannot reschedule a confirmed, completed or cancelled appointment");
+            throw new ValidationException("Cannot reschedule a confirmed, completed or cancelled appointment");
         }
 
         // Get updated patient and doctor information
         var patient = await _patientService.GetPatientById(appointment.PatientId);
         if (patient is null)
         {
-            throw new Exception("Patient not found");
+            throw new NotFoundException("Patient", appointment.PatientId.ToString());
         }
 
         var doctor = await _staffService.GetStaffById(newSlot.DoctorId);
         if (doctor is null)
         {
-            throw new Exception("Doctor not found");
+            throw new NotFoundException("Doctor", newSlot.DoctorId.ToString());
         }
 
         // Update names
@@ -205,12 +207,12 @@ public class AppointmentService : IAppointmentService
         var appointment = await _appointmentRepo.GetById(appointmentId);
         if (appointment is null)
         {
-            throw new Exception("Appointment not found");
+            throw new NotFoundException("Appointment", appointmentId.ToString());
         }
 
         if (appointment.Status != AppointmentStatus.PENDING)
         {
-            throw new Exception("Cannot confirm a completed or cancelled appointment");
+            throw new ValidationException("Cannot confirm a completed or cancelled appointment");
         }
 
         appointment.Status = AppointmentStatus.CONFIRMED;
@@ -223,12 +225,12 @@ public class AppointmentService : IAppointmentService
         var appointment = await _appointmentRepo.GetById(appointmentId);
         if (appointment is null)
         {
-            throw new Exception("Appointment not found");
+            throw new NotFoundException("Appointment", appointmentId.ToString());
         }
 
         if (appointment.Status != AppointmentStatus.CONFIRMED)
         {
-            throw new Exception("Cannot complete non-confirmed appointment");
+            throw new ValidationException("Cannot complete non-confirmed appointment");
         }
 
         appointment.Status = AppointmentStatus.COMPLETED;
@@ -236,6 +238,7 @@ public class AppointmentService : IAppointmentService
         await _appointmentRepo.SaveChangesAsync();
     }
 }
+
 public class Patient
 {
     public Guid Id { get; set; }

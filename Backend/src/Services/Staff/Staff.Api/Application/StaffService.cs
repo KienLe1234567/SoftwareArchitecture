@@ -1,5 +1,6 @@
 ﻿using MassTransit;
 using Shared.Contracts;
+using Shared.Exceptions;
 using Staffs.Api.Application.Interfaces;
 
 namespace Staffs.Api.Application;
@@ -10,10 +11,10 @@ public class StaffService(
 {
     public async Task<StaffDetailResponse> GetById(Guid id)
     {
-       var staff = await staffRepo.GetById(id);
+        var staff = await staffRepo.GetById(id);
         if (staff is null)
         {
-            throw new Exception("Staff not found");
+            throw new NotFoundException("Staff", id.ToString());
         }
 
         return new StaffDetailResponse(staff.Id, staff.Name, staff.Email, staff.PhoneNumber, staff.Address);
@@ -46,7 +47,7 @@ public class StaffService(
         var staff = await staffRepo.GetById(id);
         if (staff is null)
         {
-            throw new Exception("Staff not found");
+            throw new NotFoundException("Staff", id.ToString());
         }
 
         staffRepo.Delete(staff);
@@ -58,7 +59,7 @@ public class StaffService(
         var staff = await staffRepo.GetById(req.Id);
         if (staff is null)
         {
-            throw new Exception("Staff not found");
+            throw new NotFoundException("Staff", req.Id.ToString());
         }
 
         staff.Update(req.Name, req.Email, req.PhoneNumber, req.Address);
@@ -70,12 +71,12 @@ public class StaffService(
         var staff = await staffRepo.GetById(req.StaffId);
         if (staff is null)
         {
-            throw new Exception("Staff not found");
+            throw new NotFoundException("Staff", req.StaffId.ToString());
         }
 
         if (staff.Shifts.Any(s => s.StartTime <= req.EndTime && s.EndTime >= req.StartTime))
         {
-            throw new Exception("Shift time conflict");
+            throw new ValidationException("Shift time conflict");
         }
 
         var shift = new Shift
@@ -110,19 +111,18 @@ public class StaffService(
         var staff = await staffRepo.GetById(req.StaffId);
         if (staff is null)
         {
-            throw new Exception("Staff not found");
+            throw new NotFoundException("Staff", req.StaffId.ToString());
         }
 
-        var shift = staff.Shifts.Where(s => s.Id == req.Id).FirstOrDefault();
-
+        var shift = staff.Shifts.FirstOrDefault(s => s.Id == req.Id);
         if (shift is null)
         {
-            throw new Exception("Shift not found");
+            throw new NotFoundException("Shift", req.Id.ToString());
         }
 
         if (staff.Shifts.Any(s => s.Id != req.Id && s.StartTime <= req.EndTime && s.EndTime >= req.StartTime))
         {
-            throw new Exception("Shift time conflict");
+            throw new ValidationException("Shift time conflict");
         }
 
         shift.StartTime = req.StartTime;
@@ -138,14 +138,13 @@ public class StaffService(
         var staff = await staffRepo.GetById(staffId);
         if (staff is null)
         {
-            throw new Exception("Staff not found");
+            throw new NotFoundException("Staff", staffId.ToString());
         }
 
-        var shift = staff.Shifts.Where(s => s.Id == shiftId).FirstOrDefault();
-
+        var shift = staff.Shifts.FirstOrDefault(s => s.Id == shiftId);
         if (shift is null)
         {
-            throw new Exception("Shift not found");
+            throw new NotFoundException("Shift", shiftId.ToString());
         }
 
         staff.Shifts.Remove(shift);

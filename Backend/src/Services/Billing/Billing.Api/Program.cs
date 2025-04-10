@@ -1,16 +1,20 @@
 using Microsoft.OpenApi.Models;
+using Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add services to the container.
+builder.Services.AddGlobalExceptionHandling();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
 {
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen(c =>
-    {
-        c.SwaggerDoc("v1", new OpenApiInfo { Title = "Billing API", Version = "v1" });
-    });
-}
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Billing API", Version = "v1" });
+});
 
 var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+app.UseGlobalExceptionHandling();
 
 if (app.Environment.IsDevelopment())
 {
