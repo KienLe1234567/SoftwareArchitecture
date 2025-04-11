@@ -5,6 +5,7 @@ import { getPatientById } from "@/lib/patient";
 import { getAllStaffs } from "@/lib/staff";
 import { Appointment } from "@/types/appointment";
 import { Doctor } from "@/types/doctor";
+import { Staff } from "@/types/staff"; // 👈 đảm bảo bạn có định nghĩa này
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -41,9 +42,21 @@ export default function DateComponent() {
         const fetchDoctorData = async () => {
             try {
                 const data = await getAllStaffs();
-                setDoctors(data.staffs);
-                if (data.staffs.length > 0) {
-                    setDoctor(data.staffs[0]);
+
+                const filteredDoctors: Doctor[] = data.staffs
+                    .filter((staff: Staff) => !!staff.id)
+                    .map((staff: Staff) => ({
+                        id: staff.id!,
+                        name: staff.name,
+                        email: staff.email,
+                        phoneNumber: staff.phoneNumber,
+                        address: staff.address,
+                    }));
+
+                setDoctors(filteredDoctors);
+
+                if (filteredDoctors.length > 0) {
+                    setDoctor(filteredDoctors[0]);
                 }
             } catch (error) {
                 console.error("Error fetching doctors:", error);
@@ -65,7 +78,6 @@ export default function DateComponent() {
                 setAppointments([]);
             }
         };
-
         fetchAppointments();
     }, []);
 
@@ -83,20 +95,9 @@ export default function DateComponent() {
 
     return (
         <div>
-            {/* Header */}
             <div className="flex flex-row justify-between">
-                <h1
-                    style={{
-                        marginTop: "auto",
-                        marginBottom: "auto",
-                        marginLeft: "140px",
-                        fontSize: "30px",
-                        fontWeight: 600,
-                    }}
-                >
-                    Dashboard
-                </h1>
-                <div className="flex items-center justify-between p-4 w-fit">
+                <h1 className="ml-36 text-2xl font-semibold">Dashboard</h1>
+                <div className="flex items-center p-4 w-fit">
                     <div>
                         <p className="text-gray-500 text-sm">Today's Date</p>
                         <p className="text-black text-xl font-semibold">{today}</p>
@@ -107,34 +108,20 @@ export default function DateComponent() {
                 </div>
             </div>
 
-            {/* Welcome Section */}
-            <div
-                className="relative w-full h-[400px] rounded-xl overflow-visible shadow-lg max-w-7xl mx-auto"
-                style={{ marginBottom: "40px" }}
-            >
-                <div
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/b3.jpg')", filter: "brightness(0.9)" }}
-                />
+            <div className="relative w-full h-[400px] rounded-xl overflow-visible shadow-lg max-w-7xl mx-auto mb-10">
+                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/b3.jpg')", filter: "brightness(0.9)" }} />
                 <div className="absolute inset-0 bg-white bg-opacity-40" />
                 <div className="relative z-10 h-full flex items-center justify-start pl-10">
                     <div className="text-left max-w-xl">
                         <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome!</h2>
-                        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                            {patientName || "Patient"}
-                        </h1>
+                        <h1 className="text-4xl font-bold text-gray-900 mb-4">{patientName || "Patient"}</h1>
                         <p className="text-gray-700 mb-6">
-                            Haven't any idea about doctors? No problem, let's jump to{" "}
-                            <strong>"All Doctors"</strong> section or <strong>"Sessions"</strong>.
-                            <br />
-                            Track your past and future appointments history.
-                            <br />
+                            Haven't any idea about doctors? No problem, let's jump to <strong>"All Doctors"</strong> section or <strong>"Sessions"</strong>.<br />
+                            Track your past and future appointments history.<br />
                             Also find out the expected arrival time of your doctor or medical consultant.
                         </p>
                         <div className="mt-4">
-                            <label className="text-lg font-semibold text-gray-800 mb-2 block">
-                                Channel a Doctor Here
-                            </label>
+                            <label className="text-lg font-semibold text-gray-800 mb-2 block">Channel a Doctor Here</label>
                             <div className="flex relative">
                                 <input
                                     style={{
@@ -178,35 +165,28 @@ export default function DateComponent() {
                 </div>
             </div>
 
-            {/* Appointment Section */}
-            <div className="flex p-4 gap-4 mx-auto" style={{ width: "90%" }}>
+            <div className="flex p-4 gap-4 mx-auto w-[90%]">
                 <div className="w-1/2 flex flex-col gap-4">
                     <div className="grid grid-cols-2 gap-4 mx-auto">
-                        <button className="border-2 rounded p-4 flex justify-between items-center" style={{ width: "15rem" }}
-                            onClick={() => router.push('/dashboardpatient/profilePatient')}>
+                        <button className="border-2 rounded p-4 flex justify-between items-center w-[15rem]" onClick={() => router.push('/dashboardpatient/profilePatient')}>
                             <div><p className="text-gray-700">Patient Profile</p></div>
                             <div className="bg-gray-200 p-3 rounded-md">
                                 <img src="/patients-hover.svg" className="w-8 h-8" alt="Patient Profile Icon" />
                             </div>
                         </button>
-
-                        <button className="border-2 rounded p-4 flex justify-between items-center" style={{ width: "15rem" }}
-                            onClick={() => router.push('/dashboardpatient/doctorinfo')}>
+                        <button className="border-2 rounded p-4 flex justify-between items-center w-[15rem]" onClick={() => router.push('/dashboardpatient/doctorinfo')}>
                             <div><p className="text-gray-700">Doctor List</p></div>
                             <div className="bg-gray-200 p-3 rounded-md">
                                 <img src="/doctors-hover.svg" className="w-8 h-8" alt="Doctor List Icon" />
                             </div>
                         </button>
-
-                        <button className="border-2 rounded p-4 flex justify-between items-center" style={{ width: "15rem" }}>
+                        <button className="border-2 rounded p-4 flex justify-between items-center w-[15rem]">
                             <div><p className="text-gray-700">Medical Histories</p></div>
                             <div className="bg-gray-200 p-3 rounded-md">
                                 <img src="/book-hover.svg" className="w-8 h-8" alt="Medical Histories Icon" />
                             </div>
                         </button>
-
-                        <button className="border-2 rounded p-4 flex justify-between items-center" style={{ width: "15rem" }}
-                            onClick={() => router.push('/dashboardpatient/mySessions')}>
+                        <button className="border-2 rounded p-4 flex justify-between items-center w-[15rem]" onClick={() => router.push('/dashboardpatient/mySessions')}>
                             <div><p className="text-gray-700 text-left">Upcoming Appointments</p></div>
                             <div className="bg-gray-200 p-3 rounded-md">
                                 <img src="/session-iceblue.svg" className="w-8 h-8" alt="Upcoming Appointments Icon" />
@@ -215,7 +195,7 @@ export default function DateComponent() {
                     </div>
                 </div>
 
-                <div className="w-1/2 border-2 rounded py-4 overflow-auto" style={{ width: "45%" }}>
+                <div className="w-1/2 border-2 rounded py-4 overflow-auto">
                     <h2 className="text-xl text-center font-semibold mb-2">Your Up Coming Bookings</h2>
                     <table className="w-full table-fixed text-center" style={{ borderCollapse: "separate" }}>
                         <thead>

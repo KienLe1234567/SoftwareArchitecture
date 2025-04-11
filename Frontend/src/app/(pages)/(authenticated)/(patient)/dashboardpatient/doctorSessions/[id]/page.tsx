@@ -11,48 +11,44 @@ import { Slot } from "@/types/slot";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-
 export default function DoctorSessions({ params }: { params: { id: string } }) {
     const router = useRouter();
     const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
     const [currentDate, setCurrentDate] = useState<Date>(new Date());
     const [slotsForSelectedDate, setSlotsForSelectedDate] = useState<Slot[]>([]);
-    const [doctors, setDoctors] = useState<Doctor[]>([]); // 👈 danh sách bác sĩ
+    const [doctors, setDoctors] = useState<Doctor[]>([]);
 
     const doctorId = params.id;
+    const patientId = "a2559b6b-0ca9-4d88-90b8-9565386339c0";
 
     const fetchDoctors = async () => {
         try {
-            const res = await getAllStaffs(); // response = { staffs: [...] }
-            setDoctors(res.staffs); // 👈 truy cập đúng vào mảng bên trong
+            const res = await getAllStaffs(); // res.staffs: Staff[]
+            const converted: Doctor[] = res.staffs
+                .filter((staff) => !!staff.id) // loại bỏ undefined id
+                .map((staff) => ({
+                    id: staff.id as string,
+                    name: staff.name,
+                    email: staff.email,
+                    phoneNumber: staff.phoneNumber,
+                    address: staff.address ?? "",
+                }));
+            setDoctors(converted);
         } catch (error) {
             console.error("Failed to fetch doctors:", error);
         }
     };
-    useEffect(() => {
-        fetchDoctors();
-    }, []);
 
     const fetchSlots = async (date: Date) => {
         try {
             const dateString = date.toLocaleDateString("sv-SE"); // yyyy-MM-dd
             const slots: Slot[] = await getSlots(doctorId, dateString);
-            // slots.forEach(slot => {
-            //     console.log(`SlotId: ${slot.id}`);
-            // });
-
             setSlotsForSelectedDate(slots);
         } catch (error) {
             console.error("Error fetching slots:", error);
             setSlotsForSelectedDate([]);
         }
     };
-
-    useEffect(() => {
-        if (currentDate) {
-            fetchSlots(currentDate);
-        }
-    }, [currentDate, doctorId]);
 
     const handleDateSelect = (date: Date | undefined) => {
         if (date) {
@@ -62,15 +58,11 @@ export default function DoctorSessions({ params }: { params: { id: string } }) {
         }
     };
 
-    const patientId = "a2559b6b-0ca9-4d88-90b8-9565386339c0";
-
     const handleConfirmSelection = async () => {
         if (selectedSlots.length === 0) return;
 
         try {
-            //console.log(selectedSlots);
-            const slotId = selectedSlots[0]; // chỉ chọn 1 slot để tạo appointment
-            //console.log(`SlotID: ${slotId}`);
+            const slotId = selectedSlots[0];
             const data = { slotId, patientId };
             await createAppointment(data);
             console.log("Appointment created:", data);
@@ -80,13 +72,22 @@ export default function DoctorSessions({ params }: { params: { id: string } }) {
         }
     };
 
+    useEffect(() => {
+        fetchDoctors();
+    }, []);
+
+    useEffect(() => {
+        if (currentDate) {
+            fetchSlots(currentDate);
+        }
+    }, [currentDate, doctorId]);
+
     return (
         <div className="container mx-auto py-8">
             <h1 className="text-2xl font-bold mb-6">Time Slot Selection</h1>
 
-            {/* Layout 3 cột: bác sĩ - lịch - giờ */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Cột trái: danh sách bác sĩ */}
+                {/* Doctors list */}
                 <div>
                     <h2 className="text-lg font-semibold mb-4">Doctors</h2>
                     <div className="space-y-4">
@@ -101,13 +102,10 @@ export default function DoctorSessions({ params }: { params: { id: string } }) {
                                 />
                             </div>
                         ))}
-
-
                     </div>
                 </div>
 
-
-                {/* Cột giữa: Calendar */}
+                {/* Calendar */}
                 <div>
                     <h2 className="text-lg font-semibold mb-4">Select Date</h2>
                     <Calendar
@@ -118,7 +116,7 @@ export default function DoctorSessions({ params }: { params: { id: string } }) {
                     />
                 </div>
 
-                {/* Cột phải: Time slots */}
+                {/* Time slots */}
                 <div className="space-y-6">
                     <TimeSlotGrid
                         selectedSlots={selectedSlots}
@@ -127,7 +125,6 @@ export default function DoctorSessions({ params }: { params: { id: string } }) {
                         setCurrentDate={setCurrentDate}
                         slots={slotsForSelectedDate}
                     />
-
                     <div className="flex justify-end">
                         <Button
                             onClick={handleConfirmSelection}
