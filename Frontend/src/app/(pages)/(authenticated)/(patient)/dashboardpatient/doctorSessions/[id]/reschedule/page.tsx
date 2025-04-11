@@ -5,7 +5,7 @@ import TimeSlotGrid from "@/components/TimeSlotGrid";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { getAppointmentById, getSlots, rescheduleAppointment } from "@/lib/appointment";
-import { getStaffByID } from "@/lib/staff";
+import { getStaffById } from "@/lib/staff";
 import { Doctor } from "@/types/doctor";
 import { Slot } from "@/types/slot";
 import { useRouter } from "next/navigation";
@@ -30,9 +30,9 @@ export default function DoctorSessions({ params }: { params: { id: string } }) {
                 const id = appointment.doctorId;
                 setDoctorId(id);
 
-                const doctorInfo = await getStaffByID(id);
+                const doctorInfo = await getStaffById(id);
                 setDoctor({
-                    id: doctorInfo.id,
+                    id: doctorInfo.id as string,
                     name: doctorInfo.name,
                     email: doctorInfo.email,
                     phoneNumber: doctorInfo.phoneNumber,

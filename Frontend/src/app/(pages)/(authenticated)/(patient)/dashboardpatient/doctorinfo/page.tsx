@@ -1,5 +1,7 @@
 "use client";
 
+import DoctorInfoModal from "@/components/doctorInfoPopup";
+import { getStaffById } from "@/lib/staff";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -12,7 +14,8 @@ export default function DateComponent() {
         phoneNumber: string;
     }[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
-
+    const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
+    const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
         const currentDate = new Date().toISOString().split("T")[0];
@@ -20,7 +23,9 @@ export default function DateComponent() {
 
         const fetchDoctors = async () => {
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/staffs`);
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/staffs`
+                );
                 const data = await response.json();
                 setDoctors(data.staffs);
             } catch (error) {
@@ -31,22 +36,39 @@ export default function DateComponent() {
         fetchDoctors();
     }, []);
 
-    const filteredDoctors = doctors.filter(doctor =>
+    const filteredDoctors = doctors.filter((doctor) =>
         doctor.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    const handleViewDoctor = async (id: string) => {
+        try {
+            const data = await getStaffById(id);
+            setSelectedDoctor(data);
+            setShowModal(true);
+        } catch (error) {
+            console.error("Failed to fetch doctor info:", error);
+        }
+    };
 
     return (
         <div>
             <div className="flex flex-row justify-between">
-                <h1 style={{ marginTop: "auto", marginBottom: "auto", marginLeft: "24px", fontSize: "30px", fontWeight: 600 }}>Doctor Information</h1>
+                <h1
+                    style={{
+                        marginTop: "auto",
+                        marginBottom: "auto",
+                        marginLeft: "24px",
+                        fontSize: "30px",
+                        fontWeight: 600,
+                    }}
+                >
+                    Doctor Information
+                </h1>
                 <div className="flex items-center justify-between p-4 w-fit">
-                    {/* Bên trái: ngày tháng */}
                     <div>
                         <p className="text-gray-500 text-sm">Today's Date</p>
                         <p className="text-black text-xl font-semibold">{today}</p>
                     </div>
-
-                    {/* Bên phải: icon */}
                     <div className="bg-gray-100 p-2 rounded-lg ml-4">
                         <img src="/calendar.svg" className="w-6 h-6" alt="Calendar Icon" />
                     </div>
@@ -54,13 +76,15 @@ export default function DateComponent() {
             </div>
 
             <div className="p-6">
-                <h2 className="text-2xl font-semibold mb-4">All Doctors ({filteredDoctors.length})</h2>
+                <h2 className="text-2xl font-semibold mb-4">
+                    All Doctors ({filteredDoctors.length})
+                </h2>
 
-                {/* Search Bar for Doctor Name */}
                 <div className="flex items-center gap-4 mb-4 justify-center">
-                    {/* Input: Doctor name */}
                     <div className="flex items-center gap-2">
-                        <label htmlFor="doctorName" className="text-gray-600 font-medium">Doctor Name:</label>
+                        <label htmlFor="doctorName" className="text-gray-600 font-medium">
+                            Doctor Name:
+                        </label>
                         <input
                             type="text"
                             id="doctorName"
@@ -70,9 +94,10 @@ export default function DateComponent() {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-
-                    {/* Clear Button */}
-                    <button className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium" onClick={() => setSearchQuery("")}>
+                    <button
+                        className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium"
+                        onClick={() => setSearchQuery("")}
+                    >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             className="h-5 w-5 text-gray-800"
@@ -91,11 +116,10 @@ export default function DateComponent() {
                     </button>
                 </div>
 
-                {/* Doctor Table */}
                 <div className="border-2 rounded-lg overflow-hidden">
                     <table className="w-full table-fixed" style={{ borderCollapse: "separate" }}>
                         <thead>
-                            <tr className="text-center text-sm" style={{ borderColor: "#0a76d8" }}>
+                            <tr className="text-center text-sm">
                                 <th className="px-4 py-3 border-b-2 border-blue-500">Doctor Name</th>
                                 <th className="px-4 py-3 border-b-2 border-blue-500">Email</th>
                                 <th className="px-4 py-3 border-b-2 border-blue-500">Phone Number</th>
@@ -110,14 +134,15 @@ export default function DateComponent() {
                                     <td className="px-4 py-3">{doctor.phoneNumber}</td>
                                     <td className="px-4 py-3">
                                         <div className="flex gap-2 justify-center">
-                                            <Link href="./doctorView">
-                                                <button className="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-md">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                    View
-                                                </button>
-                                            </Link>
+                                            <button
+                                                onClick={() => handleViewDoctor(doctor.id)}
+                                                className="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-md"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                View
+                                            </button>
                                             <Link href={`./doctorSessions/${doctor.id}`}>
                                                 <button className="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-md">
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -135,8 +160,7 @@ export default function DateComponent() {
                 </div>
             </div>
 
-            {/* Floating Add Patient Button */}
-            <Link href="./addPatient">
+            {/* <Link href="./addPatient">
                 <div className="fixed bottom-6 right-6 group cursor-pointer">
                     <div className="bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition">
                         <svg
@@ -153,7 +177,13 @@ export default function DateComponent() {
                         Add new patient
                     </span>
                 </div>
-            </Link>
+            </Link> */}
+
+            <DoctorInfoModal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                doctor={selectedDoctor}
+            />
         </div>
-    )
+    );
 }
