@@ -4,7 +4,7 @@ import Navbar from "@/components/navbar";
 import Sidebar from "@/components/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip"
 export const metadata: Metadata = {
-  title: "Water quality monitoring system",
+  title: "Hospital management system",
   description: "The system which helps officers collect and research the data inside",
 };
 

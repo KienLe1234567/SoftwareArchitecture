@@ -34,7 +34,7 @@ export default function Sidebar() {
               My Appointments
             </TooltipContent>
           </Tooltip>
-          <Tooltip>
+          {/* <Tooltip>
             <TooltipTrigger asChild>
               <Link href="/dashboarddoctor/myPatient">
                 <div className="rounded-lg p-2 transition-colors hover:bg-muted">
@@ -45,7 +45,7 @@ export default function Sidebar() {
             <TooltipContent side="right" sideOffset={5}>
               My Patients
             </TooltipContent>
-          </Tooltip>
+          </Tooltip> */}
 
         </div>
       </div>
