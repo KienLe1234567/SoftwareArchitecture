@@ -1,28 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableCaption,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-  DialogClose,
-} from "@/components/ui/dialog";
-// Import AlertDialog components
+import { useCallback, useEffect, useState } from "react";
+
+import { Edit, Loader2, PlusCircle, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,23 +15,112 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-// Ensure the path is correct for your project structure
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, Trash2, Edit, PlusCircle } from "lucide-react";
-import type { Doctor, DoctorDto } from "@/types/doctor"; // Assuming Doctor type has 'id'
+import { Button } from "@/components/ui/button";
 import {
-  registerStaff,
-  getAllStaffs,
-  updateStaff,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   deleteStaff,
-} from "@/lib/staff"; // Adjust path as needed
+  getAllStaffs,
+  getDoctorById,
+  getNurseById,
+  registerDoctor,
+  registerNurse,
+  updateDoctor,
+  updateNurse,
+} from "@/lib/staff";
+import { Doctor, Nurse, Staff } from "@/types/staff";
 
-// Initial state for the add/edit form
-const initialFormState: Omit<Doctor, 'id'> = {
+// Mock data for dropdowns
+const SPECIALIZATIONS = [
+  "Cardiology",
+  "Dermatology",
+  "Endocrinology",
+  "Gastroenterology",
+  "Neurology",
+  "Oncology",
+  "Pediatrics",
+  "Psychiatry",
+  "Surgery",
+  "Urology",
+] as const;
+
+const CONSULTATION_ROOMS = [
+  "Room 101",
+  "Room 102",
+  "Room 103",
+  "Room 201",
+  "Room 202",
+  "Room 203",
+  "Room 301",
+  "Room 302",
+  "Room 303",
+] as const;
+
+const DEPARTMENTS = [
+  "Emergency",
+  "Intensive Care",
+  "Medical-Surgical",
+  "Pediatric",
+  "Obstetric",
+  "Operating Room",
+  "Oncology",
+  "Psychiatric",
+  "Rehabilitation",
+] as const;
+
+const SHIFT_PREFERENCES = [
+  "Morning (7AM-3PM)",
+  "Afternoon (3PM-11PM)",
+  "Night (11PM-7AM)",
+  "Rotating",
+  "Fixed Day",
+  "Fixed Night",
+] as const;
+
+// Initial state for the form
+const initialDoctorFormState: Omit<Doctor, "id"> = {
   name: "",
   email: "",
   phoneNumber: "",
   address: "",
+  specialization: SPECIALIZATIONS[0],
+  licenseNumber: "",
+  consultationRoom: CONSULTATION_ROOMS[0],
+};
+
+const initialNurseFormState: Omit<Nurse, "id"> = {
+  name: "",
+  email: "",
+  phoneNumber: "",
+  address: "",
+  department: DEPARTMENTS[0],
+  certificationNumber: "",
+  shiftPreference: SHIFT_PREFERENCES[0],
 };
 
 // Helper function for basic email validation
@@ -58,297 +129,325 @@ const isValidEmail = (email: string): boolean => {
   return emailRegex.test(email);
 };
 
-
 export default function ManageWorkerPage() {
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [staffs, setStaffs] = useState<Staff[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [open, setOpen] = useState(false); // State for Add/Edit Dialog
-  const [editDoctorId, setEditDoctorId] = useState<string | null>(null);
-  const [form, setForm] = useState<Omit<Doctor, 'id'>>(initialFormState);
-  const { toast } = useToast(); // Keep using toast, even if display is problematic
+  const [open, setOpen] = useState(false);
+  const [editStaffId, setEditStaffId] = useState<string | null>(null);
+  const [selectedStaffType, setSelectedStaffType] = useState<
+    "Doctor" | "Nurse"
+  >("Doctor");
+  const [doctorForm, setDoctorForm] = useState<
+    Omit<Doctor, "id" | "staffType">
+  >(initialDoctorFormState);
+  const [nurseForm, setNurseForm] = useState<Omit<Nurse, "id" | "staffType">>(
+    initialNurseFormState
+  );
 
-  // State for Delete Confirmation Dialog (AlertDialog)
   const [isAlertOpen, setIsAlertOpen] = useState(false);
-  const [doctorToDelete, setDoctorToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [staffToDelete, setStaffToDelete] = useState<{
+    id: string;
+    name: string;
+    type: string;
+  } | null>(null);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  // State for form validation errors
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof typeof initialFormState, string>>>({});
-
-
-  // Fetch doctors data
-  const fetchDoctors = useCallback(async () => {
+  const fetchStaffs = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data: DoctorDto = await getAllStaffs();
-      setDoctors(data.staffs ?? []);
+      const data = await getAllStaffs();
+      setStaffs(data.staffs ?? []);
     } catch (error) {
-      console.error("Failed to fetch doctors:", error);
-      // Still try to show error toast
-      toast({
-        variant: "destructive",
-        title: "Error Loading Doctors",
-        description: error instanceof Error ? error.message : "Could not retrieve doctor list.",
+      console.error("Failed to fetch staff:", error);
+      toast.error("Error Loading Staff", {
+        description:
+          error instanceof Error
+            ? error.message
+            : "Could not retrieve staff list.",
       });
-      setDoctors([]);
+      setStaffs([]);
     } finally {
       setIsLoading(false);
     }
-  // Include toast in dependency array if it's stable, otherwise might cause issues if hook re-creates it often
-  }, [toast]); // If toast causes infinite loops, remove it from here
+  }, [toast]);
 
   useEffect(() => {
-    fetchDoctors();
-  }, [fetchDoctors]);
+    fetchStaffs();
+  }, [fetchStaffs]);
 
-  // Handler to open the Add/Edit dialog for adding a new doctor
   const handleAdd = () => {
-    setEditDoctorId(null);
-    setForm(initialFormState);
-    setFormErrors({}); // Clear errors when opening add form
+    setEditStaffId(null);
+    setDoctorForm(initialDoctorFormState);
+    setNurseForm(initialNurseFormState);
+    setSelectedStaffType("Doctor");
+    setFormErrors({});
     setOpen(true);
   };
 
-  // Handler to open the Add/Edit dialog for editing an existing doctor
-  const handleEdit = (doctor: Doctor) => {
-    setEditDoctorId(doctor.id);
-    setForm({
-      name: doctor.name,
-      email: doctor.email,
-      phoneNumber: doctor.phoneNumber,
-      address: doctor.address,
-    });
-    setFormErrors({}); // Clear errors when opening edit form
-    setOpen(true);
-  };
-
-  // Handler triggered when the delete button in the table is clicked
-  const handleDeleteClick = (id: string, name: string) => {
-    setDoctorToDelete({ id, name });
-    setIsAlertOpen(true);
-  };
-
-  // Handler for confirming the deletion after AlertDialog is shown
-  const handleConfirmDelete = async () => {
-    if (!doctorToDelete) return;
-
+  const handleEdit = async (staff: Staff) => {
+    if (!staff.id) return;
     setIsSubmitting(true);
-    try {
-      const { id, name } = doctorToDelete;
-      const status = await deleteStaff(id);
 
-      if (status >= 200 && status < 300) {
-        setDoctors((prevDoctors) => prevDoctors.filter((doc) => doc.id !== id));
-        // Try to show success toast
-        toast({
-          variant: "success",
-          title: "Doctor Deleted",
-          description: `Dr. ${name} has been successfully removed.`,
+    try {
+      if (staff.staffType === "Doctor") {
+        const doctorData = await getDoctorById(staff.id);
+        setDoctorForm({
+          name: doctorData.name,
+          email: doctorData.email,
+          phoneNumber: doctorData.phoneNumber,
+          address: doctorData.address,
+          specialization: doctorData.specialization,
+          licenseNumber: doctorData.licenseNumber,
+          consultationRoom: doctorData.consultationRoom,
         });
-        console.log("Delete successful - Should show toast here");
-        setIsAlertOpen(false);
-        setDoctorToDelete(null);
+        setSelectedStaffType("Doctor");
       } else {
-         // Try to show error toast
-         toast({
-            variant: "destructive",
-            title: "Error Deleting Doctor",
-            description: `Server responded with status ${status}`,
+        const nurseData = await getNurseById(staff.id);
+        setNurseForm({
+          name: nurseData.name,
+          email: nurseData.email,
+          phoneNumber: nurseData.phoneNumber,
+          address: nurseData.address,
+          department: nurseData.department,
+          certificationNumber: nurseData.certificationNumber,
+          shiftPreference: nurseData.shiftPreference,
         });
-        console.error(`Failed to delete doctor: Server responded with status ${status}`);
-        // Keep alert open on server error? Optional.
-        // setIsAlertOpen(false);
-        // setDoctorToDelete(null);
+        setSelectedStaffType("Nurse");
       }
+      setEditStaffId(staff.id);
+      setFormErrors({});
+      setOpen(true);
     } catch (error) {
-      console.error("Failed to delete doctor:", error);
-      // Try to show error toast
-      toast({
-        variant: "destructive",
-        title: "Error Deleting Doctor",
-        description: error instanceof Error ? error.message : "Could not remove the doctor.",
+      console.error("Failed to fetch staff details:", error);
+      toast.error("Error Loading Staff Details", {
+        description:
+          error instanceof Error
+            ? error.message
+            : "Could not load staff details.",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handler for saving changes (Add or Edit) with validation
-  const handleSave = async () => {
-    // --- Validation ---
-    setFormErrors({}); // Clear previous errors
-    const errors: Partial<Record<keyof typeof initialFormState, string>> = {};
+  const handleDeleteClick = (staff: Staff) => {
+    setStaffToDelete({
+      id: staff.id!,
+      name: staff.name,
+      type: staff.staffType,
+    });
+    setIsAlertOpen(true);
+  };
 
-    if (!form.name.trim()) errors.name = "Name is required.";
-    if (!form.email.trim()) {
-        errors.email = "Email is required.";
-    } else if (!isValidEmail(form.email)) {
-        errors.email = "Please enter a valid email address.";
-    }
-    if (!form.phoneNumber.trim()) errors.phoneNumber = "Phone number is required.";
-    if (!form.address.trim()) errors.address = "Address is required.";
+  const handleConfirmDelete = async () => {
+    if (!staffToDelete) return;
 
-    if (Object.keys(errors).length > 0) {
-        setFormErrors(errors);
-        // Don't set isSubmitting here, let it be handled by button click visually if needed
-        return; // Stop execution if validation fails
-    }
-    // --- End Validation ---
-
-    setIsSubmitting(true); // Start submitting only if validation passed
+    setIsSubmitting(true);
     try {
-      let status: number;
-      const doctorFormData = { ...form };
+      const { id, name } = staffToDelete;
+      const status = await deleteStaff(id);
 
-      if (editDoctorId) {
-        // --- Editing Existing Doctor ---
-        const updatedDoctor: Doctor = { id: editDoctorId, ...doctorFormData };
-        status = await updateStaff(updatedDoctor);
-
-        if (status >= 200 && status < 300) {
-          setDoctors((prev) => prev.map((doc) => doc.id === editDoctorId ? updatedDoctor : doc));
-          // Try to show success toast
-          toast({
-            variant: "success",
-            title: "Doctor Updated",
-            description: `Dr. ${updatedDoctor.name}'s details have been updated.`,
-          });
-          console.log("Update successful - Should show toast here");
-          setOpen(false);
-        } else {
-            // Try to show error toast
-            toast({
-                variant: "destructive",
-                title: "Error Updating Doctor",
-                description: `Update failed with status ${status}`,
-            });
-            console.error(`Update failed with status ${status}`);
-             // Keep dialog open on server error? Optional.
-            // setOpen(false);
-        }
+      if (status >= 200 && status < 300) {
+        setStaffs((prev) => prev.filter((staff) => staff.id !== id));
+        toast.success("Staff Member Deleted", {
+          description: `${name} has been successfully removed.`,
+        });
+        setIsAlertOpen(false);
+        setStaffToDelete(null);
       } else {
-        // --- Adding New Doctor ---
-        status = await registerStaff(doctorFormData as Doctor); // Adjust cast if needed
-
-        if (status >= 200 && status < 300) {
-          // Try to show success toast
-          toast({
-            variant: "success",
-            title: "Doctor Added",
-            description: `Dr. ${doctorFormData.name} has been successfully registered.`,
-          });
-          console.log("Registration successful - Should show toast here");
-          setOpen(false);
-          await fetchDoctors(); // Refetch list
-        } else {
-             // Try to show error toast
-            toast({
-                variant: "destructive",
-                title: "Error Adding Doctor",
-                description: `Registration failed with status ${status}`,
-            });
-            console.error(`Registration failed with status ${status}`);
-             // Keep dialog open on server error? Optional.
-            // setOpen(false);
-        }
+        toast.error("Error Deleting Staff Member", {
+          description: `Server responded with status ${status}`,
+        });
       }
     } catch (error) {
-      console.error("Failed to save doctor:", error);
-       // Try to show error toast
-      toast({
-        variant: "destructive",
-        title: `Error ${editDoctorId ? "Updating" : "Adding"} Doctor`,
-        description: error instanceof Error ? error.message : "Could not save doctor details.",
+      console.error("Failed to delete staff:", error);
+      toast.error("Error Deleting Staff Member", {
+        description:
+          error instanceof Error
+            ? error.message
+            : "Could not remove the staff member.",
       });
     } finally {
-      // Only set isSubmitting false if validation passed initially
-       if (Object.keys(errors).length === 0) {
-           setIsSubmitting(false);
-       }
+      setIsSubmitting(false);
     }
   };
 
-  // Handler for input changes in the Add/Edit form
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    const currentForm = selectedStaffType === "Doctor" ? doctorForm : nurseForm;
+
+    // Common validations
+    if (!currentForm.name.trim()) errors.name = "Name is required.";
+    if (!currentForm.email.trim()) {
+      errors.email = "Email is required.";
+    } else if (!isValidEmail(currentForm.email)) {
+      errors.email = "Please enter a valid email address.";
+    }
+    if (!currentForm.phoneNumber.trim())
+      errors.phoneNumber = "Phone number is required.";
+    if (!currentForm.address.trim()) errors.address = "Address is required.";
+
+    // Doctor-specific validations
+    if (selectedStaffType === "Doctor") {
+      if (!doctorForm.specialization.trim())
+        errors.specialization = "Specialization is required.";
+      if (!doctorForm.licenseNumber.trim())
+        errors.licenseNumber = "License number is required.";
+      if (!doctorForm.consultationRoom.trim())
+        errors.consultationRoom = "Consultation room is required.";
+    }
+
+    // Nurse-specific validations
+    if (selectedStaffType === "Nurse") {
+      if (!nurseForm.department.trim())
+        errors.department = "Department is required.";
+      if (!nurseForm.certificationNumber.trim())
+        errors.certificationNumber = "Certification number is required.";
+      if (!nurseForm.shiftPreference.trim())
+        errors.shiftPreference = "Shift preference is required.";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    try {
+      let status: number;
+
+      if (selectedStaffType === "Doctor") {
+        if (editStaffId) {
+          status = await updateDoctor({ ...doctorForm, id: editStaffId });
+        } else {
+          status = await registerDoctor(doctorForm);
+        }
+      } else {
+        if (editStaffId) {
+          status = await updateNurse({ ...nurseForm, id: editStaffId });
+        } else {
+          status = await registerNurse(nurseForm);
+        }
+      }
+
+      if (status >= 200 && status < 300) {
+        toast.success(
+          `${selectedStaffType} ${editStaffId ? "Updated" : "Added"}`,
+          {
+            description: `${selectedStaffType} has been successfully ${editStaffId ? "updated" : "registered"}.`,
+          }
+        );
+        setOpen(false);
+        fetchStaffs(); // Refresh the list
+      } else {
+        toast(
+          `Error ${editStaffId ? "Updating" : "Adding"} ${selectedStaffType}`,
+          {
+            description: `Operation failed with status ${status}`,
+          }
+        );
+      }
+    } catch (error) {
+      console.error(
+        `Failed to ${editStaffId ? "update" : "save"} ${selectedStaffType.toLowerCase()}:`,
+        error
+      );
+      toast.error(
+        `Error ${editStaffId ? "Updating" : "Adding"} ${selectedStaffType}`,
+        {
+          description:
+            error instanceof Error
+              ? error.message
+              : `Could not ${editStaffId ? "update" : "save"} ${selectedStaffType.toLowerCase()}.`,
+        }
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm((prevForm) => ({
-      ...prevForm,
-      [name]: value,
-    }));
-    // Clear error for the specific field when user types
-    if (formErrors[name as keyof typeof initialFormState]) {
-      setFormErrors((prevErrors) => ({
-        ...prevErrors,
-        [name]: undefined,
-      }));
+    if (selectedStaffType === "Doctor") {
+      setDoctorForm((prev) => ({ ...prev, [name]: value }));
+    } else {
+      setNurseForm((prev) => ({ ...prev, [name]: value }));
+    }
+    if (formErrors[name]) {
+      // Create a new object without the error for the current field
+      const { [name]: _, ...rest } = formErrors;
+      setFormErrors(rest);
     }
   };
 
-  // --- JSX Structure ---
+  const currentForm = selectedStaffType === "Doctor" ? doctorForm : nurseForm;
+
   return (
-    <div className="container mx-auto py-8 px-4">
-      {/* Header and Add Button */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Manage Doctors</h1>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Manage Staff</h1>
         <Button onClick={handleAdd} disabled={isLoading || isSubmitting}>
-          <PlusCircle className="mr-2 h-4 w-4" /> Add Doctor
+          <PlusCircle className="mr-2 h-4 w-4" /> Add Staff Member
         </Button>
       </div>
 
-      {/* Loading State */}
       {isLoading ? (
-        <div className="flex justify-center items-center py-10">
+        <div className="flex items-center justify-center py-10">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-3 text-muted-foreground">Loading Doctors...</span>
+          <span className="ml-3 text-muted-foreground">Loading Staff...</span>
         </div>
       ) : (
-        // Doctors Table
         <Table>
-          <TableCaption>List of registered doctors.</TableCaption>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Address</TableHead>
+              <TableHead>Type</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {doctors.length === 0 ? (
+            {staffs.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
-                  No doctors found.
+                <TableCell
+                  colSpan={6}
+                  className="py-6 text-center text-muted-foreground"
+                >
+                  No staff members found.
                 </TableCell>
               </TableRow>
             ) : (
-              doctors.map((doctor) => (
-                <TableRow key={doctor.id}>
-                  <TableCell className="font-medium">{doctor.name}</TableCell>
-                  <TableCell>{doctor.email}</TableCell>
-                  <TableCell>{doctor.phoneNumber}</TableCell>
-                  <TableCell>{doctor.address}</TableCell>
+              staffs.map((staff) => (
+                <TableRow key={staff.id}>
+                  <TableCell className="font-medium">{staff.name}</TableCell>
+                  <TableCell>{staff.email}</TableCell>
+                  <TableCell>{staff.phoneNumber}</TableCell>
+                  <TableCell>{staff.address}</TableCell>
+                  <TableCell>{staff.staffType}</TableCell>
                   <TableCell className="text-right">
-                    {/* Edit Button */}
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleEdit(doctor)}
+                      onClick={() => handleEdit(staff)}
                       disabled={isSubmitting}
                       className="mr-2"
-                      aria-label={`Edit Dr. ${doctor.name}`}
+                      aria-label={`Edit ${staff.name}`}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    {/* Delete Button - Triggers AlertDialog */}
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => handleDeleteClick(doctor.id, doctor.name)}
+                      onClick={() => handleDeleteClick(staff)}
                       disabled={isSubmitting}
-                      aria-label={`Delete Dr. ${doctor.name}`}
+                      aria-label={`Delete ${staff.name}`}
                     >
-                      {isSubmitting && doctorToDelete?.id === doctor.id ? (
+                      {isSubmitting && staffToDelete?.id === staff.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <Trash2 className="h-4 w-4" />
@@ -362,113 +461,296 @@ export default function ManageWorkerPage() {
         </Table>
       )}
 
-      {/* Add/Edit Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{editDoctorId ? "Edit Doctor" : "Add New Doctor"}</DialogTitle>
+            <DialogTitle>
+              {editStaffId ? "Edit Staff Member" : "Add New Staff Member"}
+            </DialogTitle>
             <DialogDescription>
-              {editDoctorId ? "Update the details for this doctor." : "Enter the details for the new doctor."}
+              {editStaffId
+                ? "Update the staff member's details."
+                : "Enter the details for the new staff member."}
             </DialogDescription>
           </DialogHeader>
-          {/* Use form tag for better semantics and accessibility */}
-          <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+          >
             <div className="grid gap-4 py-4">
-               {/* Name Field & Error */}
-               <div className="grid grid-cols-4 items-center gap-x-4">
-                 <Label htmlFor="name" className="text-right">Name</Label>
-                 <Input
-                   id="name"
-                   name="name"
-                   placeholder="e.g. Dr. John Doe"
-                   value={form.name}
-                   onChange={handleInputChange}
-                   className="col-span-3"
-                   disabled={isSubmitting}
-                   aria-invalid={!!formErrors.name}
-                   aria-describedby={formErrors.name ? "name-error" : undefined}
-                 />
-               </div>
-               {formErrors.name && (
-                 <div className="grid grid-cols-4 items-center gap-x-4">
-                   <div></div>
-                   <p id="name-error" className="col-span-3 text-sm text-destructive -mt-2">
-                     {formErrors.name}
-                   </p>
-                 </div>
-               )}
+              {!editStaffId && (
+                <div className="grid grid-cols-4 items-center gap-x-4">
+                  <Label htmlFor="staffType" className="text-right">
+                    Staff Type
+                  </Label>
+                  <Select
+                    value={selectedStaffType}
+                    onValueChange={(value: "Doctor" | "Nurse") =>
+                      setSelectedStaffType(value)
+                    }
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select staff type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Doctor">Doctor</SelectItem>
+                      <SelectItem value="Nurse">Nurse</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
-              {/* Email Field & Error */}
+              {/* Common Fields */}
               <div className="grid grid-cols-4 items-center gap-x-4">
-                <Label htmlFor="email" className="text-right">Email</Label>
+                <Label htmlFor="name" className="text-right">
+                  Name
+                </Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={currentForm.name}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  disabled={isSubmitting}
+                  aria-invalid={!!formErrors.name}
+                />
+              </div>
+              {formErrors.name && (
+                <div className="grid grid-cols-4 items-center gap-x-4">
+                  <div></div>
+                  <p className="col-span-3 -mt-2 text-sm text-destructive">
+                    {formErrors.name}
+                  </p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-4 items-center gap-x-4">
+                <Label htmlFor="email" className="text-right">
+                  Email
+                </Label>
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="e.g. john.doe@example.com"
-                  value={form.email}
+                  value={currentForm.email}
                   onChange={handleInputChange}
                   className="col-span-3"
                   disabled={isSubmitting}
                   aria-invalid={!!formErrors.email}
-                  aria-describedby={formErrors.email ? "email-error" : undefined}
                 />
               </div>
               {formErrors.email && (
                 <div className="grid grid-cols-4 items-center gap-x-4">
                   <div></div>
-                  <p id="email-error" className="col-span-3 text-sm text-destructive -mt-2">
+                  <p className="col-span-3 -mt-2 text-sm text-destructive">
                     {formErrors.email}
                   </p>
                 </div>
               )}
 
-              {/* Phone Field & Error */}
               <div className="grid grid-cols-4 items-center gap-x-4">
-                <Label htmlFor="phoneNumber" className="text-right">Phone</Label>
+                <Label htmlFor="phoneNumber" className="text-right">
+                  Phone
+                </Label>
                 <Input
                   id="phoneNumber"
                   name="phoneNumber"
-                  placeholder="e.g. 555-1234"
-                  value={form.phoneNumber}
+                  value={currentForm.phoneNumber}
                   onChange={handleInputChange}
                   className="col-span-3"
                   disabled={isSubmitting}
                   aria-invalid={!!formErrors.phoneNumber}
-                  aria-describedby={formErrors.phoneNumber ? "phone-error" : undefined}
                 />
               </div>
               {formErrors.phoneNumber && (
                 <div className="grid grid-cols-4 items-center gap-x-4">
                   <div></div>
-                  <p id="phone-error" className="col-span-3 text-sm text-destructive -mt-2">
+                  <p className="col-span-3 -mt-2 text-sm text-destructive">
                     {formErrors.phoneNumber}
                   </p>
                 </div>
               )}
 
-              {/* Address Field & Error */}
               <div className="grid grid-cols-4 items-center gap-x-4">
-                <Label htmlFor="address" className="text-right">Address</Label>
+                <Label htmlFor="address" className="text-right">
+                  Address
+                </Label>
                 <Input
                   id="address"
                   name="address"
-                  placeholder="e.g. 123 Main St, Anytown"
-                  value={form.address}
+                  value={currentForm.address}
                   onChange={handleInputChange}
                   className="col-span-3"
                   disabled={isSubmitting}
                   aria-invalid={!!formErrors.address}
-                  aria-describedby={formErrors.address ? "address-error" : undefined}
                 />
               </div>
               {formErrors.address && (
                 <div className="grid grid-cols-4 items-center gap-x-4">
                   <div></div>
-                  <p id="address-error" className="col-span-3 text-sm text-destructive -mt-2">
+                  <p className="col-span-3 -mt-2 text-sm text-destructive">
                     {formErrors.address}
                   </p>
                 </div>
+              )}
+
+              {/* Doctor-specific fields */}
+              {selectedStaffType === "Doctor" && (
+                <>
+                  <div className="grid grid-cols-4 items-center gap-x-4">
+                    <Label htmlFor="specialization" className="text-right">
+                      Specialization
+                    </Label>
+                    <Select
+                      value={doctorForm.specialization}
+                      onValueChange={(value) =>
+                        setDoctorForm((prev) => ({
+                          ...prev,
+                          specialization: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select specialization" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SPECIALIZATIONS.map((spec) => (
+                          <SelectItem key={spec} value={spec}>
+                            {spec}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-4 items-center gap-x-4">
+                    <Label htmlFor="licenseNumber" className="text-right">
+                      License Number
+                    </Label>
+                    <Input
+                      id="licenseNumber"
+                      name="licenseNumber"
+                      value={doctorForm.licenseNumber}
+                      onChange={handleInputChange}
+                      className="col-span-3"
+                      disabled={isSubmitting}
+                      aria-invalid={!!formErrors.licenseNumber}
+                    />
+                  </div>
+                  {formErrors.licenseNumber && (
+                    <div className="grid grid-cols-4 items-center gap-x-4">
+                      <div></div>
+                      <p className="col-span-3 -mt-2 text-sm text-destructive">
+                        {formErrors.licenseNumber}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-4 items-center gap-x-4">
+                    <Label htmlFor="consultationRoom" className="text-right">
+                      Room
+                    </Label>
+                    <Select
+                      value={doctorForm.consultationRoom}
+                      onValueChange={(value) =>
+                        setDoctorForm((prev) => ({
+                          ...prev,
+                          consultationRoom: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select room" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CONSULTATION_ROOMS.map((room) => (
+                          <SelectItem key={room} value={room}>
+                            {room}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
+
+              {/* Nurse-specific fields */}
+              {selectedStaffType === "Nurse" && (
+                <>
+                  <div className="grid grid-cols-4 items-center gap-x-4">
+                    <Label htmlFor="department" className="text-right">
+                      Department
+                    </Label>
+                    <Select
+                      value={nurseForm.department}
+                      onValueChange={(value) =>
+                        setNurseForm((prev) => ({ ...prev, department: value }))
+                      }
+                    >
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select department" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DEPARTMENTS.map((dept) => (
+                          <SelectItem key={dept} value={dept}>
+                            {dept}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-4 items-center gap-x-4">
+                    <Label htmlFor="certificationNumber" className="text-right">
+                      Certification
+                    </Label>
+                    <Input
+                      id="certificationNumber"
+                      name="certificationNumber"
+                      value={nurseForm.certificationNumber}
+                      onChange={handleInputChange}
+                      className="col-span-3"
+                      disabled={isSubmitting}
+                      aria-invalid={!!formErrors.certificationNumber}
+                    />
+                  </div>
+                  {formErrors.certificationNumber && (
+                    <div className="grid grid-cols-4 items-center gap-x-4">
+                      <div></div>
+                      <p className="col-span-3 -mt-2 text-sm text-destructive">
+                        {formErrors.certificationNumber}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-4 items-center gap-x-4">
+                    <Label htmlFor="shiftPreference" className="text-right">
+                      Preferred Shift
+                    </Label>
+                    <Select
+                      value={nurseForm.shiftPreference}
+                      onValueChange={(value) =>
+                        setNurseForm((prev) => ({
+                          ...prev,
+                          shiftPreference: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select preferred shift" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SHIFT_PREFERENCES.map((shift) => (
+                          <SelectItem key={shift} value={shift}>
+                            {shift}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
               )}
             </div>
 
@@ -478,29 +760,30 @@ export default function ManageWorkerPage() {
                   Cancel
                 </Button>
               </DialogClose>
-              {/* Use type="submit" for the save button */}
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {editDoctorId ? "Save Changes" : "Add Doctor"}
+                {isSubmitting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                {editStaffId ? "Save Changes" : "Add Staff Member"}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Alert Dialog */}
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete Dr.{" "}
-              <span className="font-semibold">{doctorToDelete?.name ?? ""}</span> and remove their data.
+              This action cannot be undone. This will permanently delete{" "}
+              <span className="font-semibold">{staffToDelete?.name}</span> and
+              remove their data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel
-              onClick={() => setDoctorToDelete(null)}
+              onClick={() => setStaffToDelete(null)}
               disabled={isSubmitting}
             >
               Cancel
@@ -510,7 +793,9 @@ export default function ManageWorkerPage() {
               disabled={isSubmitting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
