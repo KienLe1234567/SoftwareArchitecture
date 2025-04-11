@@ -31,7 +31,7 @@ export default function Sidebar() {
         </Tooltip>
 
         {/* Tracking Employee Workload */}
-        <Tooltip>
+        {/* <Tooltip>
           <TooltipTrigger asChild>
             <Link href="/dashboardstaff/trackworkload">
               <ClipboardList className="text-gray-800 hover:text-blue-600 cursor-pointer" />
@@ -40,7 +40,7 @@ export default function Sidebar() {
           <TooltipContent side="right">
             Tracking Workload
           </TooltipContent>
-        </Tooltip>
+        </Tooltip> */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Link href="/dashboardstaff/manageworker">
