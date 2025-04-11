@@ -26,8 +26,8 @@ services:
     networks:
       - app-network
     ports:
-      - "6000:8080"
-      - "6060:8081"
+      - "6006:8080"
+      - "6066:8081"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro

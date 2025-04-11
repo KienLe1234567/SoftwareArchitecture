@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Staffs.Api.Infrastructure.Database;
 
@@ -11,9 +12,11 @@ using Staffs.Api.Infrastructure.Database;
 namespace Staffs.Api.Migrations
 {
     [DbContext(typeof(StaffDbContext))]
-    partial class StaffDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250410160846_AddStaffInheritance")]
+    partial class AddStaffInheritance
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -74,9 +77,6 @@ namespace Staffs.Api.Migrations
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

@@ -2,6 +2,7 @@
 using Shared.Contracts;
 using Shared.Exceptions;
 using Staffs.Api.Application.Interfaces;
+using Staffs.Api.Domain.Enums;
 
 namespace Staffs.Api.Application;
 
@@ -17,29 +18,13 @@ public class StaffService(
             throw new NotFoundException("Staff", id.ToString());
         }
 
-        return new StaffDetailResponse(staff.Id, staff.Name, staff.Email, staff.PhoneNumber, staff.Address);
+        return new StaffDetailResponse(staff.Id, staff.Name, staff.Email, staff.PhoneNumber, staff.Address, staff.Type.ToString());
     }
 
     public async Task<StaffListResponse> GetAll()
     {
         var staffs = await staffRepo.GetAll();
-        return new StaffListResponse(staffs.Select(x => new StaffDetailResponse(x.Id, x.Name, x.Email, x.PhoneNumber, x.Address)).ToList());
-    }
-
-    public async Task<CreateStaffResponse> RegisterStaff(CreateStaffRequest req)
-    {
-        Staff newStaff = new()
-        {
-            Name = req.Name,
-            Email = req.Email,
-            PhoneNumber = req.PhoneNumber,
-            Address = req.Address
-        };
-
-        staffRepo.Add(newStaff);
-        await staffRepo.SaveChangesAsync();
-
-        return new CreateStaffResponse(newStaff.Id);
+        return new StaffListResponse(staffs.Select(x => new StaffDetailResponse(x.Id, x.Name, x.Email, x.PhoneNumber, x.Address, x.Type.ToString())).ToList());
     }
 
     public async Task DeleteStaff(Guid id)
@@ -54,16 +39,11 @@ public class StaffService(
         await staffRepo.SaveChangesAsync();
     }
 
-    public async Task UpdateStaff(UpdateStaffRequest req)
+    public async Task<ShiftListResponse> GetStaffShifts(Guid staffId)
     {
-        var staff = await staffRepo.GetById(req.Id);
-        if (staff is null)
-        {
-            throw new NotFoundException("Staff", req.Id.ToString());
-        }
+        var shifts = await staffRepo.GetShiftsByStaffId(staffId);
 
-        staff.Update(req.Name, req.Email, req.PhoneNumber, req.Address);
-        await staffRepo.SaveChangesAsync();
+        return new ShiftListResponse(shifts.Select(s => new ShiftDetail(s.Id, s.StaffId, s.StartTime, s.EndTime, s.Description, s.Location)).ToList());
     }
 
     public async Task<CreateShiftResponse> RegisterShift(CreateShiftRequest req)
@@ -91,20 +71,17 @@ public class StaffService(
         staff.RegisterShift(shift);
         await staffRepo.SaveChangesAsync();
 
-        await publishEndpoint.Publish(new DoctorShiftCreatedEvent(
-            staff.Id,
-            shift.StartTime,
-            shift.EndTime));
+        if (staff.Type == StaffType.Doctor)
+        {
+            await publishEndpoint.Publish(new DoctorShiftCreatedEvent(
+                staff.Id,
+                shift.StartTime,
+                shift.EndTime));
+        }
 
         return new CreateShiftResponse(shift.Id);
     }
 
-    public async Task<ShiftListResponse> GetStaffShifts(Guid staffId)
-    {
-        var shifts = await staffRepo.GetShiftsByStaffId(staffId);
-
-        return new ShiftListResponse(shifts.Select(s => new ShiftDetail(s.Id, s.StaffId, s.StartTime, s.EndTime, s.Description, s.Location)).ToList());
-    }
 
     public async Task UpdateShift(UpdateShiftRequest req)
     {

@@ -1,18 +1,20 @@
-﻿namespace Staffs.Api.Domain.Entities;
+﻿using Staffs.Api.Domain.Enums;
+
+namespace Staffs.Api.Domain.Entities;
 
 public class Staff
 {
     public Guid Id { get; set; }
-    public string Name { get; set; }
-    public string Email { get; set; }
-    public string PhoneNumber { get; set; }
-    public string Address { get; set; }
+    public required string Name { get; set; }
+    public required string Email { get; set; }
+    public required string PhoneNumber { get; set; }
+    public required string Address { get; set; }
+    public required StaffType Type { get; set; }
     public List<Shift> Shifts { get; set; } = [];
 
     public Guid RegisterShift(Shift shift)
     {
         Shifts.Add(shift);
-
         return shift.Id;
     }
 
