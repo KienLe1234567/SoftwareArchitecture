@@ -147,10 +147,13 @@ export async function confirmAppointment(id: string): Promise<Appointment> {
  * @param id - ID của cuộc hẹn.
  * @returns Promise<Appointment> - Thông tin cuộc hẹn sau khi đặt lại lịch.
  */
-export async function rescheduleAppointment(id: string): Promise<Appointment> {
+export async function rescheduleAppointment(id: string, newSlotId: string): Promise<Appointment> {
     try {
         const res = await axios.post(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/appointments-api/api/appointments/${id}/reschedule`
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/appointments-api/api/appointments/${id}/reschedule`,
+            {
+                newSlotId,
+            }
         );
         return res.data;
     } catch (error) {
@@ -159,9 +162,15 @@ export async function rescheduleAppointment(id: string): Promise<Appointment> {
     }
 }
 
-export async function cancelAppointment(id: string) {
+/**
+ * Hủy một cuộc hẹn dựa trên appointment ID.
+ * @param id - ID của cuộc hẹn.
+ */
+export async function cancelAppointment(id: string): Promise<void> {
     try {
-        console.log("Cancel Appointment");
+        const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/appointments-api/api/appointments/${id}/cancel`;
+        await axios.post(url); // Gửi POST request đến endpoint
+        console.log(`Appointment ${id} has been canceled.`);
     } catch (error) {
         console.error(error);
         throw new Error("Failed to cancel appointment");

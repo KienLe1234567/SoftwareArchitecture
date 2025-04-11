@@ -1,10 +1,10 @@
 import AppFooter from "@/components/footer";
 import Navbar from "@/components/navbar";
-import Sidebar from "@/components/sidebar";
+import Sidebar from "@/components/sidebarPatient";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { Metadata } from "next";
 export const metadata: Metadata = {
-    title: "Doctor",
+    title: "Patient",
     description: "The system which helps officers collect and research the data inside",
 };
 

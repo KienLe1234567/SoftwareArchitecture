@@ -1,10 +1,12 @@
 export interface Patient {
     id: string;
-    name: string;
+    firstName: string;
+    lastName: string;
     age: number;
     gender: "male" | "female" | "other";
     email: string;
     phoneNumber: string;
+    dateOfBirth: string;
     address?: string;
 }
 
