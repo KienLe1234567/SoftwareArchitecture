@@ -48,7 +48,7 @@ export default function Sidebar() {
             </Link>
           </TooltipTrigger>
           <TooltipContent side="right">
-            Manage Doctor
+            Manage Staff
           </TooltipContent>
         </Tooltip>
       </div>
