@@ -1,19 +1,33 @@
 import axios from "axios";
 
-import { Doctor, DoctorDto } from "@/types/doctor";
 import { Shift, ShiftDto } from "@/types/shift";
+import { Doctor, Nurse, Staff, StaffDto } from "@/types/staff";
+
 import { formatToApiIsoString } from "./utils";
 
 /**
  * Lấy danh sách tất cả nhân viên từ API
- * @returns Promise<DoctorDto> - Dữ liệu trả về từ API
  */
-export async function getAllStaffs(): Promise<DoctorDto> {
+export async function getAllStaffs(): Promise<StaffDto> {
   try {
     const res = await axios.get(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/staffs`
     );
-    console.log(res);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    throw new Error("Failed to get staffs");
+  }
+}
+
+/**
+ * Lấy danh sách tất cả bác sĩ từ API
+ */
+export async function getAllDoctors(): Promise<Doctor[]> {
+  try {
+    const res = await axios.get(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/doctors`
+    );
     return res.data;
   } catch (error) {
     console.log(error);
@@ -22,31 +36,42 @@ export async function getAllStaffs(): Promise<DoctorDto> {
 }
 
 /**
- * Lấy danh sách ca làm việc của một nhân viên cụ thể
- * @param id - ID của nhân viên
- * @returns Promise<ShiftDto> - Dữ liệu ca làm việc của nhân viên
+ * Lấy danh sách tất cả y tá từ API
  */
-export async function getStaffShifts(id: string): Promise<ShiftDto> {
+export async function getAllNurses(): Promise<Nurse[]> {
   try {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/staffs/${id}/shifts`
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/nurses`
     );
     return res.data;
   } catch (error) {
     console.log(error);
-    throw new Error("Failed to get shifts for chosen doctor");
+    throw new Error("Failed to get nurses");
   }
 }
 
 /**
  * Lấy thông tin chi tiết của một nhân viên theo ID
- * @param id - ID của nhân viên
- * @returns Promise<Doctor> - Thông tin chi tiết của nhân viên
  */
-export async function getStaffByID(id: string): Promise<Doctor> {
+export async function getStaffById(id: string): Promise<Staff> {
   try {
     const res = await axios.get(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/staffs/${id}`
+    );
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    throw new Error("Failed to get staff by id");
+  }
+}
+
+/**
+ * Lấy thông tin chi tiết của một bác sĩ theo ID
+ */
+export async function getDoctorById(id: string): Promise<Doctor> {
+  try {
+    const res = await axios.get(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/doctors/${id}`
     );
     return res.data;
   } catch (error) {
@@ -56,14 +81,29 @@ export async function getStaffByID(id: string): Promise<Doctor> {
 }
 
 /**
- * Đăng ký thông tin nhân viên mới
- * @param doctor - Thông tin nhân viên cần đăng ký
- * @returns Promise<number> - Status code trả về từ API
+ * Lấy thông tin chi tiết của một y tá theo ID
  */
-export async function registerStaff(doctor: Doctor): Promise<number> {
+export async function getNurseById(id: string): Promise<Nurse> {
+  try {
+    const res = await axios.get(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/nurses/${id}`
+    );
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    throw new Error("Failed to get nurse by id");
+  }
+}
+
+/**
+ * Đăng ký thông tin bác sĩ mới
+ */
+export async function registerDoctor(
+  doctor: Omit<Doctor, "id">
+): Promise<number> {
   try {
     const res = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/staffs`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/doctors`,
       doctor,
       {
         headers: {
@@ -71,7 +111,6 @@ export async function registerStaff(doctor: Doctor): Promise<number> {
         },
       }
     );
-
     return res.status;
   } catch (error) {
     console.error("Failed to register doctor:", error);
@@ -80,13 +119,43 @@ export async function registerStaff(doctor: Doctor): Promise<number> {
 }
 
 /**
+ * Đăng ký thông tin y tá mới
+ */
+export async function registerNurse(nurse: Omit<Nurse, "id">): Promise<number> {
+  try {
+    const res = await axios.post(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/nurses`,
+      nurse,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return res.status;
+  } catch (error) {
+    console.error("Failed to register nurse:", error);
+    throw new Error("Failed to register nurse");
+  }
+}
+
+/**
+ * Lấy danh sách ca làm việc của một nhân viên cụ thể
+ */
+export async function getStaffShifts(id: string): Promise<ShiftDto> {
+  try {
+    const res = await axios.get(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/staffs/${id}/shifts`
+    );
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    throw new Error("Failed to get shifts for staff member");
+  }
+}
+
+/**
  * Đăng ký ca làm việc mới cho nhân viên
- * @param staffId - ID của nhân viên
- * @param startTime - Thời gian bắt đầu ca
- * @param endTime - Thời gian kết thúc ca
- * @param description - Mô tả ca làm việc (tùy chọn)
- * @param location - Địa điểm làm việc (tùy chọn)
- * @returns Promise<string> - ID của ca làm việc mới được tạo
  */
 export async function registerShifts(
   staffId: string,
@@ -109,14 +178,12 @@ export async function registerShifts(
     return res.data.id;
   } catch (error) {
     console.log(error);
-    throw new Error("Failed to register shifts for chosen doctor");
+    throw new Error("Failed to register shifts for staff member");
   }
 }
 
 /**
  * Cập nhật thông tin ca làm việc
- * @param shift - Thông tin ca làm việc cần cập nhật
- * @returns Promise<number> - Status code trả về từ API
  */
 export async function updateShift(shift: Shift): Promise<number> {
   try {
@@ -134,7 +201,6 @@ export async function updateShift(shift: Shift): Promise<number> {
         },
       }
     );
-
     return res.status;
   } catch (error) {
     console.log(error);
@@ -164,14 +230,12 @@ export async function deleteShift(
 }
 
 /**
- * Cập nhật thông tin nhân viên
- * @param doctor - Thông tin nhân viên cần cập nhật
- * @returns Promise<number> - Status code trả về từ API
+ * Cập nhật thông tin bác sĩ
  */
-export async function updateStaff(doctor: Doctor): Promise<number> {
+export async function updateDoctor(doctor: Doctor): Promise<number> {
   try {
     const res = await axios.put(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/staffs/${doctor.id}`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/doctors/${doctor.id}`,
       doctor,
       {
         headers: {
@@ -179,18 +243,66 @@ export async function updateStaff(doctor: Doctor): Promise<number> {
         },
       }
     );
-
     return res.status;
   } catch (error) {
     console.log(error);
-    throw new Error("Failed to update staff");
+    throw new Error("Failed to update doctor");
   }
 }
 
 /**
- * Xóa nhân viên
- * @param id - ID của nhân viên cần xóa
- * @returns Promise<number> - Status code trả về từ API
+ * Cập nhật thông tin y tá
+ */
+export async function updateNurse(nurse: Nurse): Promise<number> {
+  try {
+    const res = await axios.put(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/nurses/${nurse.id}`,
+      nurse,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return res.status;
+  } catch (error) {
+    console.log(error);
+    throw new Error("Failed to update nurse");
+  }
+}
+
+/**
+ * Xóa bác sĩ
+ */
+export async function deleteDoctor(id: string): Promise<number> {
+  try {
+    const res = await axios.delete(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/doctors/${id}`
+    );
+    return res.status;
+  } catch (error) {
+    console.error("Failed to delete doctor:", error);
+    throw new Error("Failed to delete doctor");
+  }
+}
+
+/**
+ * Xóa y tá
+ */
+export async function deleteNurse(id: string): Promise<number> {
+  try {
+    const res = await axios.delete(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/nurses/${id}`
+    );
+    return res.status;
+  } catch (error) {
+    console.error("Failed to delete nurse:", error);
+    throw new Error("Failed to delete nurse");
+  }
+}
+
+/**
+ * Xóa nhân viên (chung)
  */
 export async function deleteStaff(id: string): Promise<number> {
   try {
