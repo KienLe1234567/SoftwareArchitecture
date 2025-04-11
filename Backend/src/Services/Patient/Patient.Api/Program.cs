@@ -4,7 +4,18 @@ using Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var MyAllowSpecificOrigins = "AllowAll";
+
 {
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy(name: MyAllowSpecificOrigins, policy =>
+        {
+            policy.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+        });
+    });
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(c =>
     {
@@ -73,7 +84,7 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Patient API V1");
     });
 }
-
+app.UseCors(MyAllowSpecificOrigins);
 app.UseGlobalExceptionHandling();
 
 app.MapGet("/api/patients", () =>
