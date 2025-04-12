@@ -62,7 +62,6 @@ public class AppointmentService : IAppointmentService
             throw new ValidationException("Slot is not available");
         }
 
-        // Validate that patient and doctor exist and get their information
         var patient = await _patientService.GetPatientById(req.PatientId);
         if (patient is null)
         {
@@ -88,6 +87,15 @@ public class AppointmentService : IAppointmentService
         _appointmentRepo.Add(appointment);
         slot.Status = SlotStatus.BOOKED;
         await _appointmentRepo.SaveChangesAsync();
+
+        await _publishEndpoint.Publish(new AppointmentCreatedEvent(
+            appointment.Id,
+            appointment.PatientName,
+            patient.Email,
+            appointment.DoctorName,
+            slot.StartTime,
+            slot.EndTime
+        ));
 
         return new CreateAppointmentResponse(appointment.Id);
     }
@@ -133,16 +141,29 @@ public class AppointmentService : IAppointmentService
     public async Task CancelAppointment(Guid appointmentId)
     {
         var appointment = await _appointmentRepo.GetById(appointmentId);
-
         if (appointment is null)
         {
             throw new NotFoundException("Appointment", appointmentId.ToString());
         }
 
+        var patient = await _patientService.GetPatientById(appointment.PatientId);
+        if (patient is null)
+        {
+            throw new NotFoundException("Patient", appointment.PatientId.ToString());
+        }
+
         appointment.Status = AppointmentStatus.CANCELLED;
         appointment.Slot.Status = SlotStatus.AVAILABLE;
-
         await _appointmentRepo.SaveChangesAsync();
+
+        await _publishEndpoint.Publish(new AppointmentCanceledEvent(
+            appointmentId,
+            appointment.PatientName,
+            patient.Email,
+            appointment.DoctorName,
+            appointment.Slot.StartTime,
+            appointment.Slot.EndTime
+        ));
     }
 
     public async Task RescheduleAppointment(Guid appointmentId, Guid newSlotId)
@@ -197,6 +218,7 @@ public class AppointmentService : IAppointmentService
         await _publishEndpoint.Publish(new AppointmentRescheduleEvent(
             appointmentId,
             appointment.PatientName,
+            patient.Email,
             appointment.DoctorName,
             newSlot.StartTime,
             newSlot.EndTime));
@@ -215,9 +237,23 @@ public class AppointmentService : IAppointmentService
             throw new ValidationException("Cannot confirm a completed or cancelled appointment");
         }
 
-        appointment.Status = AppointmentStatus.CONFIRMED;
+        var patient = await _patientService.GetPatientById(appointment.PatientId);
+        if (patient is null)
+        {
+            throw new NotFoundException("Patient", appointment.PatientId.ToString());
+        }
 
+        appointment.Status = AppointmentStatus.CONFIRMED;
         await _appointmentRepo.SaveChangesAsync();
+
+        await _publishEndpoint.Publish(new AppointmentConfirmedEvent(
+            appointmentId,
+            appointment.PatientName,
+            patient.Email,
+            appointment.DoctorName,
+            appointment.Slot.StartTime,
+            appointment.Slot.EndTime
+        ));
     }
 
     public async Task CompleteAppointment(Guid appointmentId)
@@ -233,18 +269,22 @@ public class AppointmentService : IAppointmentService
             throw new ValidationException("Cannot complete non-confirmed appointment");
         }
 
+        var patient = await _patientService.GetPatientById(appointment.PatientId);
+        if (patient is null)
+        {
+            throw new NotFoundException("Patient", appointment.PatientId.ToString());
+        }
+
         appointment.Status = AppointmentStatus.COMPLETED;
-
         await _appointmentRepo.SaveChangesAsync();
-    }
-}
 
-public class Patient
-{
-    public Guid Id { get; set; }
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public string PhoneNumber { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public DateTime DateOfBirth { get; set; }
+        await _publishEndpoint.Publish(new AppointmentCompletedEvent(
+            appointmentId,
+            appointment.PatientName,
+            patient.Email,
+            appointment.DoctorName,
+            appointment.Slot.StartTime,
+            appointment.Slot.EndTime
+        ));
+    }
 }

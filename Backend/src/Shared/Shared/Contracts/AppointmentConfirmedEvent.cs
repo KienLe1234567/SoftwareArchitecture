@@ -1,9 +1,9 @@
 namespace Shared.Contracts;
 
-public record AppointmentRescheduleEvent(
+public record AppointmentConfirmedEvent(
     Guid AppointmentId,
     string PatientName,
     string PatientEmail,
     string DoctorName,
-    DateTime NewStartTime,
-    DateTime NewEndTime);
+    DateTime StartTime,
+    DateTime EndTime);
