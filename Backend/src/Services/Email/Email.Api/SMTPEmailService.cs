@@ -3,11 +3,11 @@ using MimeKit;
 
 namespace Email.Api;
 
-public class EmailService : IEmailService
+public class SMTPEmailService : IEmailService
 {
     private readonly IConfiguration _config;
-    private readonly ILogger<EmailService> _logger;
-    public EmailService(IConfiguration config, ILogger<EmailService> logger)
+    private readonly ILogger<SMTPEmailService> _logger;
+    public SMTPEmailService(IConfiguration config, ILogger<SMTPEmailService> logger)
     {
         _config = config;
         _logger = logger;

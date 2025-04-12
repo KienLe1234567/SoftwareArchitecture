@@ -3,7 +3,7 @@ using Email.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<IEmailService, EmailService>();
+builder.Services.AddSingleton<IEmailService, SMTPEmailService>();
 
 var app = builder.Build();
 Env.Load();
