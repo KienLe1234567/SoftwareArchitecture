@@ -5,7 +5,8 @@ public record StaffDetailResponse(
     string Name,
     string Email,
     string PhoneNumber,
-    string Address
+    string Address,
+    string StaffType
 );
 
 public record StaffListResponse(

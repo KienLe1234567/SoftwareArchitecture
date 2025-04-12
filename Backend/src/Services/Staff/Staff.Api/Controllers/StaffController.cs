@@ -23,24 +23,6 @@ public class StaffController(
 
         return Results.Ok(staffs);
     }
-
-    [HttpPost]
-    public async Task<IResult> Create([FromBody] CreateStaffRequest req)
-    {
-        var res = await staffService.RegisterStaff(req);
-
-        return Results.Created($"/api/staffs/{res.Id}", res);
-    }
-
-    [HttpPut("{staffId:guid}")]
-    public async Task<IResult> Update([FromRoute] Guid staffId, [FromBody] UpdateStaffRequest req)
-    {
-        var staff = req with { Id = staffId };
-        await staffService.UpdateStaff(staff);
-
-        return Results.NoContent();
-    }
-
     [HttpDelete("{staffId:guid}")]
     public async Task<IResult> Delete([FromRoute] Guid staffId)
     {
