@@ -1,4 +1,4 @@
-import { Patient } from "@/types/patientfake";
+import { Patient } from "@/types/types";
 import axios from "axios";
 
 export async function getPatientById(id: string): Promise<Patient> {
