@@ -1,14 +1,27 @@
 using Microsoft.OpenApi.Models;
 using Patients.Api.Domain.Entities.Patients;
+using Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var MyAllowSpecificOrigins = "AllowAll";
+
 {
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy(name: MyAllowSpecificOrigins, policy =>
+        {
+            policy.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+        });
+    });
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(c =>
     {
         c.SwaggerDoc("v1", new OpenApiInfo { Title = "Patient API", Version = "v1" });
     });
+    builder.Services.AddGlobalExceptionHandling();
 }
 
 List<Patient> fakePatients =
@@ -71,10 +84,22 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Patient API V1");
     });
 }
+app.UseCors(MyAllowSpecificOrigins);
+app.UseGlobalExceptionHandling();
 
 app.MapGet("/api/patients", () =>
 {
     return Results.Ok(fakePatients);
+});
+
+app.MapGet("/api/patients/{patientId:guid}", (Guid patientId) =>
+{
+    var patient = fakePatients.FirstOrDefault(p => p.Id == patientId);
+    if (patient == null)
+    {
+        return Results.NotFound();
+    }
+    return Results.Ok(patient);
 });
 
 app.Run();

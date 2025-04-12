@@ -6,7 +6,8 @@ namespace Staffs.Api.Controllers;
 
 [Route("api/staffs")]
 public class StaffController(
-    IStaffService staffService) : ControllerBase
+    IStaffService staffService,
+    IShiftService shiftService) : ControllerBase
 {
     [HttpGet("{staffId:guid}")]
     public async Task<IResult> GetById([FromRoute] Guid staffId)
@@ -23,24 +24,6 @@ public class StaffController(
 
         return Results.Ok(staffs);
     }
-
-    [HttpPost]
-    public async Task<IResult> Create([FromBody] CreateStaffRequest req)
-    {
-        var res = await staffService.RegisterStaff(req);
-
-        return Results.Created($"/api/staffs/{res.Id}", res);
-    }
-
-    [HttpPut("{staffId:guid}")]
-    public async Task<IResult> Update([FromRoute] Guid staffId, [FromBody] UpdateStaffRequest req)
-    {
-        var staff = req with { Id = staffId };
-        await staffService.UpdateStaff(staff);
-
-        return Results.NoContent();
-    }
-
     [HttpDelete("{staffId:guid}")]
     public async Task<IResult> Delete([FromRoute] Guid staffId)
     {
@@ -52,7 +35,7 @@ public class StaffController(
     [HttpGet("{staffId:guid}/shifts")]
     public async Task<IResult> GetStaffShifts([FromRoute] Guid staffId)
     {
-        var shifts = await staffService.GetStaffShifts(staffId);
+        var shifts = await shiftService.GetStaffShifts(staffId);
 
         return Results.Ok(shifts);
     }
@@ -61,7 +44,7 @@ public class StaffController(
     public async Task<IResult> RegisterShift([FromRoute] Guid staffId, [FromBody] CreateShiftRequest req)
     {
         var shift = req with { StaffId = staffId };
-        var res = await staffService.RegisterShift(shift);
+        var res = await shiftService.RegisterShift(shift);
 
         return Results.Created($"/api/staffs/{staffId}/shifts/{res.Id}", res);
     }
@@ -70,7 +53,7 @@ public class StaffController(
     public async Task<IResult> UpdateShift([FromRoute] Guid staffId, [FromRoute] Guid shiftId, [FromBody] UpdateShiftRequest req)
     {
         var shift = req with { Id = shiftId, StaffId = staffId };
-        await staffService.UpdateShift(shift);
+        await shiftService.UpdateShift(shift);
 
         return Results.NoContent();
     }
@@ -78,7 +61,7 @@ public class StaffController(
     [HttpDelete("{staffId:guid}/shifts/{shiftId:guid}")]
     public async Task<IResult> DeleteShift([FromRoute] Guid staffId, [FromRoute] Guid shiftId)
     {
-        await staffService.DeleteShift(staffId, shiftId);
+        await shiftService.DeleteShift(staffId, shiftId);
 
         return Results.NoContent();
     }

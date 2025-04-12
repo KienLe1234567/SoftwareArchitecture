@@ -3,6 +3,7 @@ using Appointments.Api.Application.Consumers;
 using Appointments.Api.Infrastructure.Database;
 using MassTransit;
 using Microsoft.OpenApi.Models;
+using Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,12 +47,16 @@ var MyAllowSpecificOrigins = "AllowAll";
             cfg.ConfigureEndpoints(ctx);
         });
     });
+
+    builder.Services.AddGlobalExceptionHandling();
 }
 
 var app = builder.Build();
 
 app.MapControllers();
 app.UseCors(MyAllowSpecificOrigins);
+
+app.UseGlobalExceptionHandling();
 
 if (app.Environment.IsDevelopment())
 {

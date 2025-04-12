@@ -26,7 +26,7 @@ public class AppointmentRepo : IAppointmentRepo
 
     public async Task<List<Appointment>> GetAll()
     {
-        return await _context.Appointments.Include(x => x.Slot).ToListAsync();
+        return await _context.Appointments.Include(x => x.Slot).AsNoTracking().ToListAsync();
     }
 
     public async Task<Appointment?> GetById(Guid id)

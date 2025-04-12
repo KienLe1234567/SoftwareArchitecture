@@ -75,9 +75,52 @@ namespace Staffs.Api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.ToTable("Staff", "staff");
+
+                    b.UseTptMappingStrategy();
+                });
+
+            modelBuilder.Entity("Staffs.Api.Domain.Entities.Doctor", b =>
+                {
+                    b.HasBaseType("Staffs.Api.Domain.Entities.Staff");
+
+                    b.Property<string>("ConsultationRoom")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LicenseNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Specialization")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable("Doctors", "staff");
+                });
+
+            modelBuilder.Entity("Staffs.Api.Domain.Entities.Nurse", b =>
+                {
+                    b.HasBaseType("Staffs.Api.Domain.Entities.Staff");
+
+                    b.Property<string>("CertificationNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Department")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ShiftPreference")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable("Nurses", "staff");
                 });
 
             modelBuilder.Entity("Staffs.Api.Domain.Entities.Shift", b =>
@@ -89,6 +132,24 @@ namespace Staffs.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Staff");
+                });
+
+            modelBuilder.Entity("Staffs.Api.Domain.Entities.Doctor", b =>
+                {
+                    b.HasOne("Staffs.Api.Domain.Entities.Staff", null)
+                        .WithOne()
+                        .HasForeignKey("Staffs.Api.Domain.Entities.Doctor", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Staffs.Api.Domain.Entities.Nurse", b =>
+                {
+                    b.HasOne("Staffs.Api.Domain.Entities.Staff", null)
+                        .WithOne()
+                        .HasForeignKey("Staffs.Api.Domain.Entities.Nurse", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Staffs.Api.Domain.Entities.Staff", b =>

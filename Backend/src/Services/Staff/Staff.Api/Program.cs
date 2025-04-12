@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Staffs.Api.Application;
 using Staffs.Api.Infrastructure.Database;
+using Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +28,7 @@ var MyAllowSpecificOrigins = "AllowAll";
     builder.Services.AddControllers();
     builder.Services.AddApplication();
     builder.Services.AddStaffDbContext(builder.Configuration.GetConnectionString("StaffConnection")!);
+    builder.Services.AddGlobalExceptionHandling();
 
     builder.Services.AddMassTransit(config =>
     {
@@ -48,6 +50,7 @@ var app = builder.Build();
 
 app.MapControllers();
 app.UseCors(MyAllowSpecificOrigins);
+app.UseGlobalExceptionHandling();
 
 if (app.Environment.IsDevelopment())
 {
