@@ -25,7 +25,7 @@ export default function DoctorSessions({ params }: { params: { id: string } }) {
         try {
             const res = await getAllStaffs(); // res.staffs: Staff[]
             const converted: Doctor[] = res.staffs
-                .filter((staff) => !!staff.id) // loại bỏ undefined id
+                .filter((staff) => staff.id && staff.staffType === "Doctor") // chỉ lấy Doctor
                 .map((staff) => ({
                     id: staff.id as string,
                     name: staff.name,
@@ -33,7 +33,9 @@ export default function DoctorSessions({ params }: { params: { id: string } }) {
                     phoneNumber: staff.phoneNumber,
                     address: staff.address ?? "",
                 }));
+
             setDoctors(converted);
+
         } catch (error) {
             console.error("Failed to fetch doctors:", error);
         }

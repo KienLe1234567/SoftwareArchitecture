@@ -43,8 +43,10 @@ export default function DateComponent() {
     const handleViewDoctor = async (id: string) => {
         try {
             const data = await getStaffById(id);
-            setSelectedDoctor(data);
-            setShowModal(true);
+            if (data.staffType === "Doctor") {
+                setSelectedDoctor(data);
+                setShowModal(true);
+            }
         } catch (error) {
             console.error("Failed to fetch doctor info:", error);
         }

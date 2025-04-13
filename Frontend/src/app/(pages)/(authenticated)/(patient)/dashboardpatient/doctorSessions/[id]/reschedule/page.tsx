@@ -31,13 +31,15 @@ export default function DoctorSessions({ params }: { params: { id: string } }) {
                 setDoctorId(id);
 
                 const doctorInfo = await getStaffById(id);
-                setDoctor({
-                    id: doctorInfo.id as string,
-                    name: doctorInfo.name,
-                    email: doctorInfo.email,
-                    phoneNumber: doctorInfo.phoneNumber,
-                    address: doctorInfo.address,
-                });
+                if (doctorInfo.staffType === "Doctor") {
+                    setDoctor({
+                        id: doctorInfo.id as string,
+                        name: doctorInfo.name,
+                        email: doctorInfo.email,
+                        phoneNumber: doctorInfo.phoneNumber,
+                        address: doctorInfo.address,
+                    });
+                }
             } catch (error) {
                 console.error("Failed to fetch doctor by appointment:", error);
             }

@@ -44,7 +44,7 @@ export default function DateComponent() {
                 const data = await getAllStaffs();
 
                 const filteredDoctors: Doctor[] = data.staffs
-                    .filter((staff: Staff) => !!staff.id)
+                    .filter((staff: Staff) => staff.id && staff.staffType === "Doctor")
                     .map((staff: Staff) => ({
                         id: staff.id!,
                         name: staff.name,
