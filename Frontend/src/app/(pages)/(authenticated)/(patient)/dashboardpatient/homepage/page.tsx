@@ -69,16 +69,24 @@ export default function DateComponent() {
         const fetchAppointments = async () => {
             try {
                 const res = await getAppointments(undefined, patientID);
-                const futureAppointments = (res ?? []).filter(
-                    (appt: Appointment) => appt.status !== "CANCELLED"
-                );
+
+                const today = new Date().toISOString().split("T")[0]; // "yyyy-mm-dd"
+
+                const futureAppointments = (res ?? []).filter((appt: Appointment) => {
+                    const apptDate = appt.startTime.split("T")[0]; // lấy ngày từ startTime
+                    //console.log(apptDate);
+                    return appt.status !== "CANCELLED" && apptDate >= today;
+                });
+
                 setAppointments(futureAppointments);
             } catch (error) {
                 console.error("Error fetching appointments:", error);
                 setAppointments([]);
             }
         };
+
         fetchAppointments();
+
     }, []);
 
     const handleSearch = (value: string) => {
