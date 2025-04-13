@@ -18,3 +18,12 @@ export type EventColor =
   | "rose"
   | "emerald"
   | "orange"
+
+    export interface Patient {
+    id: string; 
+    firstName: string;
+    lastName: string; 
+    phoneNumber: string;
+    email: string; 
+    dateOfBirth: string; 
+  }

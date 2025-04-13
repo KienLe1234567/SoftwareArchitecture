@@ -17,7 +17,7 @@ import {
 } from "@/lib/appointment2"; // API appointment
 import { getPatientById } from "@/lib/patient2"; // API patient
 import { Appointment } from "@/types/appointment"; // Interface Appointment
-import { Patient } from "@/types/patientfake"; // Interface Patient
+import { Patient } from "@/types/types"; // Interface Patient
 import { cn } from "@/lib/utils";
 
 // --- Shadcn UI Components ---
@@ -94,7 +94,7 @@ export default function MyAppointmentsPage() {
     // --- Patient Details Popup Handler ---
     // Hàm này chỉ fetch dữ liệu, việc mở/đóng Dialog sẽ do state isPatientPopupOpen quản lý
     const fetchPatientDetails = async (patientId: string) => {
-         if (!patientId || isFetchingPatientDetails) return; // Tránh fetch lại khi đang fetch
+        if (!patientId || isFetchingPatientDetails) return; // Tránh fetch lại khi đang fetch
 
         setIsFetchingPatientDetails(true); setPatientFetchError(null); setPatientDetails(null);
         try {
@@ -104,7 +104,7 @@ export default function MyAppointmentsPage() {
                 setPatientDetails(data);
                 console.log("Patient details fetched:", data);
             } else {
-                 throw new Error("Received invalid patient data structure.");
+                throw new Error("Received invalid patient data structure.");
             }
         } catch (err) {
             console.error(`Failed to fetch patient ${patientId}:`, err);
@@ -142,22 +142,22 @@ export default function MyAppointmentsPage() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 sm:mb-6">
                 <h1 className="text-3xl font-bold tracking-tight">Appointment Manager</h1>
-                <div className="flex items-center space-x-2 border rounded-lg px-3 py-1.5 text-sm"><CalendarIcon className="h-4 w-4 text-muted-foreground"/><span className="font-semibold">{format(new Date(), "dd MMM, yyyy")}</span></div>
+                <div className="flex items-center space-x-2 border rounded-lg px-3 py-1.5 text-sm"><CalendarIcon className="h-4 w-4 text-muted-foreground" /><span className="font-semibold">{format(new Date(), "dd MMM, yyyy")}</span></div>
             </div>
 
             {/* Filter Section */}
             <Card className="shadow-sm">
                 <CardHeader><CardTitle>Filter Appointments</CardTitle><CardDescription>Select a date to view appointments.</CardDescription></CardHeader>
                 <CardContent className="flex flex-wrap items-center gap-2 sm:gap-4">
-                    <Popover><PopoverTrigger asChild><Button variant="outline" className={cn("w-full sm:w-[280px] justify-start", !filterDate && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4"/>{filterDate ? format(filterDate, "PPP") : "Pick date"}</Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={filterDate} onSelect={setFilterDate} /></PopoverContent></Popover>
-                    <Button onClick={handleFilter} disabled={isLoading || !filterDate}><Filter className="mr-2 h-4"/>Filter{isLoading && filterDate && <Loader2 className="ml-2 h-4 animate-spin"/>}</Button>
-                    <Button variant="ghost" onClick={handleClearFilter} disabled={!filterDate || isLoading}><FilterX className="mr-2 h-4"/>Clear{isLoading && !filterDate && <Loader2 className="ml-2 h-4 animate-spin"/>}</Button>
+                    <Popover><PopoverTrigger asChild><Button variant="outline" className={cn("w-full sm:w-[280px] justify-start", !filterDate && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4" />{filterDate ? format(filterDate, "PPP") : "Pick date"}</Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={filterDate} onSelect={setFilterDate} /></PopoverContent></Popover>
+                    <Button onClick={handleFilter} disabled={isLoading || !filterDate}><Filter className="mr-2 h-4" />Filter{isLoading && filterDate && <Loader2 className="ml-2 h-4 animate-spin" />}</Button>
+                    <Button variant="ghost" onClick={handleClearFilter} disabled={!filterDate || isLoading}><FilterX className="mr-2 h-4" />Clear{isLoading && !filterDate && <Loader2 className="ml-2 h-4 animate-spin" />}</Button>
                 </CardContent>
             </Card>
 
             {/* Loading / Error Display */}
             {isLoading && (<div className="flex justify-center items-center py-10 text-muted-foreground"><Loader2 className="h-8 w-8 animate-spin text-primary" /><span className="ml-3 text-lg">Loading appointments...</span></div>)}
-            {error && !isLoading && (<div className="p-4 border border-red-300 bg-red-50 text-red-700 rounded-lg shadow-sm"><div className="flex items-center gap-2"><AlertCircle className="h-5 w-5 flex-shrink-0"/><span className="font-semibold">Error Occurred</span></div><p className="mt-2 text-sm">{error}</p></div>)}
+            {error && !isLoading && (<div className="p-4 border border-red-300 bg-red-50 text-red-700 rounded-lg shadow-sm"><div className="flex items-center gap-2"><AlertCircle className="h-5 w-5 flex-shrink-0" /><span className="font-semibold">Error Occurred</span></div><p className="mt-2 text-sm">{error}</p></div>)}
 
             {/* Appointments Table Section */}
             {!isLoading && !error && (
@@ -178,7 +178,7 @@ export default function MyAppointmentsPage() {
                                         <TableCell>{formatAppointmentDate(appointment.startTime)}</TableCell>
                                         {/* Status Cell */}
                                         <TableCell>
-                                            <span className={cn( "inline-block px-2 py-0.5 rounded-full text-xs font-semibold",
+                                            <span className={cn("inline-block px-2 py-0.5 rounded-full text-xs font-semibold",
                                                 appointment.status === "CONFIRMED" && "bg-blue-100 text-blue-800 dark:bg-blue-700/30 dark:text-blue-300",
                                                 appointment.status === "PENDING" && "bg-yellow-100 text-yellow-800 dark:bg-yellow-700/30 dark:text-yellow-300",
                                                 appointment.status === "COMPLETED" && "bg-green-100 text-green-800 dark:bg-green-700/30 dark:text-green-300",
@@ -260,25 +260,25 @@ export default function MyAppointmentsPage() {
                 </Card>
             )}
 
-             {/* --- Patient Details Dialog (Rendered outside the loop, controlled by state) --- */}
-             <Dialog open={isPatientPopupOpen} onOpenChange={(isOpen) => {
-                 setIsPatientPopupOpen(isOpen);
-                 if (!isOpen) {
-                     // Reset state khi đóng dialog
-                     setCurrentlyViewingPatientId(null);
-                     setPatientDetails(null);
-                     setPatientFetchError(null);
-                     setIsFetchingPatientDetails(false);
-                 }
-             }}>
+            {/* --- Patient Details Dialog (Rendered outside the loop, controlled by state) --- */}
+            <Dialog open={isPatientPopupOpen} onOpenChange={(isOpen) => {
+                setIsPatientPopupOpen(isOpen);
+                if (!isOpen) {
+                    // Reset state khi đóng dialog
+                    setCurrentlyViewingPatientId(null);
+                    setPatientDetails(null);
+                    setPatientFetchError(null);
+                    setIsFetchingPatientDetails(false);
+                }
+            }}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle className="flex items-center"><User className="mr-2 h-5 w-5" />Patient Information</DialogTitle>
-                        {currentlyViewingPatientId && <DialogDescription>Details for patient ID: {currentlyViewingPatientId.substring(0,8)}...</DialogDescription>}
+                        {currentlyViewingPatientId && <DialogDescription>Details for patient ID: {currentlyViewingPatientId.substring(0, 8)}...</DialogDescription>}
                     </DialogHeader>
                     <div className="py-4 space-y-2 text-sm">
-                        {isFetchingPatientDetails && (<div className="text-center"><Loader2 className="animate-spin inline mr-2"/>Loading...</div>)}
-                        {patientFetchError && !isFetchingPatientDetails && (<div className="text-red-600"><AlertCircle className="inline mr-2"/>{patientFetchError}</div>)}
+                        {isFetchingPatientDetails && (<div className="text-center"><Loader2 className="animate-spin inline mr-2" />Loading...</div>)}
+                        {patientFetchError && !isFetchingPatientDetails && (<div className="text-red-600"><AlertCircle className="inline mr-2" />{patientFetchError}</div>)}
                         {patientDetails && !isFetchingPatientDetails && !patientFetchError && (<>
                             <div className="flex justify-between border-b pb-1"><span className="font-medium text-muted-foreground">Full Name:</span> <span>{patientDetails.firstName} {patientDetails.lastName}</span></div>
                             <div className="flex justify-between border-b pb-1"><span className="font-medium text-muted-foreground">Email:</span> <span>{patientDetails.email || 'N/A'}</span></div>
@@ -286,9 +286,9 @@ export default function MyAppointmentsPage() {
                             <div className="flex justify-between"><span className="font-medium text-muted-foreground">Date of Birth:</span> <span>{formatPatientDOB(patientDetails.dateOfBirth)}</span></div>
                         </>)}
                         {/* Hiển thị thông báo nếu không có ID hoặc lỗi không fetch được */}
-                         {!isFetchingPatientDetails && !patientDetails && !patientFetchError && currentlyViewingPatientId && (
+                        {!isFetchingPatientDetails && !patientDetails && !patientFetchError && currentlyViewingPatientId && (
                             <div className="text-muted-foreground text-center">No details found for this patient.</div>
-                         )}
+                        )}
                     </div>
                     <DialogFooter>
                         <DialogClose asChild><Button type="button" variant="secondary">Close</Button></DialogClose>
@@ -318,7 +318,7 @@ export default function MyAppointmentsPage() {
                             <div className="flex justify-between border-b pb-1"><span className="font-medium text-muted-foreground">Date:</span> <span>{formatAppointmentDate(selectedAppointment.startTime)}</span></div>
                             <div className="flex justify-between border-b pb-1"><span className="font-medium text-muted-foreground">Time:</span> <span>{formatAppointmentTime(selectedAppointment.startTime, selectedAppointment.endTime)}</span></div>
                             <div className="flex justify-between items-center"><span className="font-medium text-muted-foreground">Status:</span>
-                                <span className={cn( "px-2 py-0.5 rounded text-xs font-semibold",
+                                <span className={cn("px-2 py-0.5 rounded text-xs font-semibold",
                                     selectedAppointment.status === "CONFIRMED" && "bg-blue-100 text-blue-800 dark:bg-blue-700/30 dark:text-blue-300",
                                     selectedAppointment.status === "PENDING" && "bg-yellow-100 text-yellow-800 dark:bg-yellow-700/30 dark:text-yellow-300",
                                     selectedAppointment.status === "COMPLETED" && "bg-green-100 text-green-800 dark:bg-green-700/30 dark:text-green-300",
@@ -331,9 +331,9 @@ export default function MyAppointmentsPage() {
                         </div>
                     )}
                     {/* Hiển thị nếu không có selectedAppointment (trường hợp lỗi logic) */}
-                     {!selectedAppointment && (
-                         <div className="text-muted-foreground text-center py-4">No appointment selected.</div>
-                     )}
+                    {!selectedAppointment && (
+                        <div className="text-muted-foreground text-center py-4">No appointment selected.</div>
+                    )}
                     <DialogFooter>
                         <DialogClose asChild><Button type="button" variant="secondary">Close</Button></DialogClose>
                     </DialogFooter>
