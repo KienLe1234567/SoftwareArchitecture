@@ -1,0 +1,144 @@
+version: '3.4'
+
+services:
+  sqlserver:
+    container_name: sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=L0c@lpassword
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - app-network
+ 
+  staff.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - ConnectionStrings__StaffConnection=Server=sqlserver;Database=HospitalManagement;User Id=sa;Password=L0c@lpassword;TrustServerCertificate=True;MultiSubnetFailover=True;
+    depends_on:
+      - sqlserver
+    networks:
+      - app-network
+    ports:
+      - "6006:8080"
+      - "6066:8081"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  appointment.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - ConnectionStrings__AppointmentConnection=Server=sqlserver;Database=HospitalManagement;User Id=sa;Password=L0c@lpassword;TrustServerCertificate=True;MultiSubnetFailover=True;
+      - Services__PatientApi=http://patient.api:8080
+      - Services__StaffApi=http://staff.api:8080
+    depends_on:
+      - sqlserver
+    networks:
+      - app-network
+    ports:
+      - "6001:8080"
+      - "6061:8081"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  patient.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - ConnectionStrings__StaffConnection=Server=sqlserver;Database=HospitalManagement;User Id=sa;Password=L0c@lpassword;TrustServerCertificate=True;MultiSubnetFailover=True;
+    depends_on:
+      - sqlserver
+    networks:
+      - app-network
+    ports:
+      - "6002:8080"
+      - "6062:8081"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  billing.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - ConnectionStrings__StaffConnection=Server=sqlserver;Database=HospitalManagement;User Id=sa;Password=L0c@lpassword;TrustServerCertificate=True;MultiSubnetFailover=True;
+    depends_on:
+      - sqlserver
+    networks:
+      - app-network
+    ports:
+      - "6003:8080"
+      - "6063:8081"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  gateway.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__StaffConnection=Server=sqlserver;Database=HospitalManagement;User Id=sa;Password=L0c@lpassword;TrustServerCertificate=True;MultiSubnetFailover=True;
+      - STAFF_API_URL=http://staff.api:8080
+      - APPOINTMENT_API_URL=http://appointment.api:8080
+      - PATIENT_API_URL=http://patient.api:8080
+      - BILLING_API_URL=http://billing.api:8080
+    networks:
+      - app-network
+    ports:
+      - "7000:8080"
+      - "7070:8081"
+    depends_on:
+      - staff.api
+      - appointment.api
+      - patient.api
+      - billing.api
+      - sqlserver
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+  
+  messagequeue:
+    container_name: messagequeue
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - app-network  
+  
+  email.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+    networks:
+      - app-network
+    env_file:
+      - ./src/Services/Email/Email.Api/.env
+    ports:
+      - "6004:8080"
+      - "6064:8081"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
