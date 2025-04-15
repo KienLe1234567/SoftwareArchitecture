@@ -1,7 +1,7 @@
 "use client";
 
 import DoctorInfoModal from "@/components/doctorInfoPopup";
-import { getStaffById } from "@/lib/staff";
+import { getAllStaffs, getStaffById } from "@/lib/staff";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -23,15 +23,24 @@ export default function DateComponent() {
 
         const fetchDoctors = async () => {
             try {
-                const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_BACKEND_URL}/staffs-api/api/staffs`
-                );
-                const data = await response.json();
-                setDoctors(data.staffs);
+                const data = await getAllStaffs();
+
+                const filteredDoctors = (data.staffs ?? [])
+                    .filter((staff) => staff.id && staff.staffType === "Doctor") // chỉ lấy Doctor
+                    .map((staff) => ({
+                        id: staff.id as string,
+                        name: staff.name,
+                        email: staff.email,
+                        phoneNumber: staff.phoneNumber,
+                        address: staff.address ?? "",
+                    }));
+
+                setDoctors(filteredDoctors);
             } catch (error) {
                 console.error("Error fetching doctors:", error);
             }
         };
+
 
         fetchDoctors();
     }, []);
