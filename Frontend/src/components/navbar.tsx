@@ -61,7 +61,7 @@ export default function Navbar() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
+                  {/* <DropdownMenuItem>
                     <Link
                       href="/profile"
                       className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-600 rounded-md transition-all duration-200 ease-in-out"
@@ -69,7 +69,7 @@ export default function Navbar() {
                       <User className="mr-2 h-4 w-4" />
                       My Profile
                     </Link>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   <DropdownMenuItem>
                     {/* <form action={onLogoutSubmit}>
                       <Button type="submit" className="flex items-center">
