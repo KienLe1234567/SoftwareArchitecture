@@ -115,6 +115,7 @@ export default function DoctorSessions({ params }: { params: { id: string } }) {
                         selected={currentDate}
                         onSelect={handleDateSelect}
                         className="rounded-md border w-full max-w-xs text-sm"
+                        disabled={(date) => date <= new Date(new Date().toDateString())}
                     />
                 </div>
 
